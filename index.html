@@ -172,13 +172,14 @@
 
             // REAL-TIME SEARCH LOGIC
             useEffect(() => {
-                if (searchQuery.length < 3) {
+                if (searchQuery.length < 2) {
                     setApiResults([]);
                     return;
                 }
+                const controller = new AbortController();
                 const timeout = setTimeout(async () => {
                     try {
-                        const res = await fetch(`https://de.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchQuery)}&search_simple=1&action=process&json=1&page_size=20`);
+                        const res = await fetch(`https://de.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchQuery)}&search_simple=1&action=process&json=1&page_size=20`, { signal: controller.signal });
                         const data = await res.json();
                         if (data.products) {
                             const formatted = data.products
@@ -197,9 +198,14 @@
                                 }));
                             setApiResults(formatted);
                         }
-                    } catch (e) { console.error("Suche fehlgeschlagen", e); }
-                }, 500);
-                return () => clearTimeout(timeout);
+                    } catch (e) { 
+                        if (e.name !== 'AbortError') console.error("Suche fehlgeschlagen", e); 
+                    }
+                }, 200);
+                return () => {
+                    clearTimeout(timeout);
+                    controller.abort();
+                };
             }, [searchQuery]);
 
             useEffect(() => { localStorage.setItem('kTrackUser', JSON.stringify(user)); }, [user]);
