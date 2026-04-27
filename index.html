@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KaloTrack – Lila Edition</title>
+    <title>KaloTrack – Pro Edition</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +22,7 @@
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: { 
                         slate: { 850: '#151e2d', 950: '#070b14' },
-                        brand: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed' } // Lila Akzent
+                        brand: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed' }
                     }
                 }
             }
@@ -32,11 +32,10 @@
     <style>
         body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; background-color: #070b14; color: #f8fafc; font-family: 'Inter', sans-serif; }
         .glass-card { background: rgba(21, 30, 45, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .hidden-input { display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .spinner { animation: spin 1s linear infinite; }
-        #qr-reader { border: none !important; border-radius: 2rem; overflow: hidden; }
-        #qr-reader__scan_region video { object-fit: cover !important; border-radius: 2rem; }
+        #qr-reader { border: none !important; }
+        #qr-reader video { border-radius: 1.5rem; object-fit: cover !important; }
     </style>
 </head>
 <body class="bg-slate-950">
@@ -50,16 +49,16 @@
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
         );
         const Plus = (p) => <IconWrapper {...p}><path d="M5 12h14"/><path d="M12 5v14"/></IconWrapper>;
-        const Home = (p) => <IconWrapper {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></IconWrapper>;
-        const UserIcon = (p) => <IconWrapper {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></IconWrapper>;
-        const Utensils = (p) => <IconWrapper {...p}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></IconWrapper>;
-        const X = (p) => <IconWrapper {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconWrapper>;
-        const Camera = (p) => <IconWrapper {...p}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></IconWrapper>;
-        const Sparkles = (p) => <IconWrapper {...p}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></IconWrapper>;
-        const ScanBarcode = (p) => <IconWrapper {...p}><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></IconWrapper>;
-        const Trash2 = (p) => <IconWrapper {...p}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></IconWrapper>;
-        const ArrowLeft = (p) => <IconWrapper {...p}><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></IconWrapper>;
-        const Loader = (p) => <IconWrapper {...p} className="spinner"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></IconWrapper>;
+        const Home = (p) => <IconWrapper {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Home>;
+        const UserIcon = (p) => <IconWrapper {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></UserIcon>;
+        const Utensils = (p) => <IconWrapper {...p}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></Utensils>;
+        const X = (p) => <IconWrapper {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></X>;
+        const Camera = (p) => <IconWrapper {...p}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></Camera>;
+        const Sparkles = (p) => <IconWrapper {...p}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></Sparkles>;
+        const ScanBarcode = (p) => <IconWrapper {...p}><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></ScanBarcode>;
+        const Trash2 = (p) => <IconWrapper {...p}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></Trash2>;
+        const ArrowLeft = (p) => <IconWrapper {...p}><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></ArrowLeft>;
+        const Loader = (p) => <IconWrapper {...p} className="spinner"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></Loader>;
 
         // --- HELPERS ---
         const resizeImage = (file) => {
@@ -89,12 +88,12 @@
             const stroke = 12;
             const normRadius = radius - stroke * 2;
             const circ = normRadius * 2 * Math.PI;
-            const percent = Math.min(100, (consumed / target) * 100) || 0;
+            const percent = Math.min(100, (consumed / (target || 1)) * 100) || 0;
             const offset = circ - (percent / 100) * circ;
 
             return (
                 <div className="relative flex items-center justify-center">
-                    <svg height={radius * 2} width={radius * 2} className="transform -rotate-90 filter drop-shadow-2xl">
+                    <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
                         <circle stroke="#1e293b" strokeWidth={stroke} fill="transparent" r={normRadius} cx={radius} cy={radius} />
                         <circle stroke="#8b5cf6" strokeWidth={stroke} strokeDasharray={circ + ' ' + circ} style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s ease' }} strokeLinecap="round" fill="transparent" r={normRadius} cx={radius} cy={radius} />
                     </svg>
@@ -106,25 +105,28 @@
             );
         };
 
-        const MacroTile = ({ label, value, subLabel, subValue, color, subColor }) => (
-            <div className="bg-slate-900/50 p-4 rounded-[1.5rem] border border-white/5">
-                <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">{label}</span>
-                    <span className={`text-sm font-black ${color}`}>{Math.round(value || 0)}g</span>
-                </div>
-                {subLabel && (
-                    <div className="flex justify-between items-center border-t border-white/5 pt-2 mt-2">
-                        <span className="text-[8px] font-black text-slate-600 uppercase tracking-wider">{subLabel}</span>
-                        <span className={`text-[10px] font-black ${subColor}`}>{Math.round(subValue || 0)}g</span>
+        const MacroBar = ({ label, value, target, colorClass }) => {
+            const percent = Math.min(100, (value / (target || 1)) * 100) || 0;
+            return (
+                <div className="space-y-1.5">
+                    <div className="flex justify-between items-end px-1">
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{label}</span>
+                        <span className="text-[10px] font-bold text-slate-300">{Math.round(value)}g <span className="text-slate-600">/ {target}g</span></span>
                     </div>
-                )}
-            </div>
-        );
+                    <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden border border-white/5 shadow-inner">
+                        <div className={`h-full ${colorClass} rounded-full transition-all duration-1000 ease-out`} style={{ width: `${percent}%` }}></div>
+                    </div>
+                </div>
+            );
+        };
 
         // --- MAIN APP ---
         function App() {
-            const [view, setView] = useState('onboarding');
-            const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('kTrackUser')));
+            const [view, setView] = useState('dashboard');
+            const [user, setUser] = useState(() => {
+                const saved = localStorage.getItem('kTrackUser');
+                return saved ? JSON.parse(saved) : { target: 2000, targetP: 150, targetC: 250, targetF: 70, targetS: 50, geminiApiKey: '' };
+            });
             const [dailyLog, setDailyLog] = useState(() => {
                 const saved = JSON.parse(localStorage.getItem('kTrackLog'));
                 const today = new Date().toISOString().split('T')[0];
@@ -143,23 +145,44 @@
             const [showAiModal, setShowAiModal] = useState(false);
 
             const aiFileRef = useRef();
+            const html5QrCode = useRef(null);
 
-            useEffect(() => { if(user) { localStorage.setItem('kTrackUser', JSON.stringify(user)); setView('dashboard'); } }, [user]);
-            useEffect(() => localStorage.setItem('kTrackLog', JSON.stringify(dailyLog)), [dailyLog]);
+            useEffect(() => {
+                localStorage.setItem('kTrackUser', JSON.stringify(user));
+            }, [user]);
+
+            useEffect(() => {
+                localStorage.setItem('kTrackLog', JSON.stringify(dailyLog));
+            }, [dailyLog]);
 
             // Barcode Scanner Logic
-            useEffect(() => {
-                let scanner = null;
-                if (isScanning) {
-                    scanner = new Html5Qrcode("qr-reader");
-                    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-                        fetchBarcode(text);
-                        scanner.stop();
+            const startScanner = async () => {
+                setIsScanning(true);
+                setTimeout(() => {
+                    html5QrCode.current = new Html5Qrcode("qr-reader");
+                    html5QrCode.current.start(
+                        { facingMode: "environment" }, 
+                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        (decodedText) => {
+                            fetchBarcode(decodedText);
+                            stopScanner();
+                        },
+                        () => {}
+                    ).catch(err => {
+                        alert("Kamera-Fehler. Bitte Berechtigungen prüfen.");
                         setIsScanning(false);
-                    }).catch(() => alert("Kamerafehler. Bitte Berechtigung prüfen."));
+                    });
+                }, 300);
+            };
+
+            const stopScanner = () => {
+                if (html5QrCode.current) {
+                    html5QrCode.current.stop().then(() => {
+                        html5QrCode.current.clear();
+                        setIsScanning(false);
+                    }).catch(() => setIsScanning(false));
                 }
-                return () => { if(scanner) scanner.stop().catch(() => {}); };
-            }, [isScanning]);
+            };
 
             const fetchBarcode = async (code) => {
                 try {
@@ -196,10 +219,10 @@
             }), { kcal: 0, p: 0, c: 0, s: 0, f: 0, sf: 0, uf: 0 }), [dailyLog]);
 
             const askGemini = async (text, img = null) => {
-                if (!user?.geminiApiKey) return alert("Hinterlege deinen Key im Profil!");
+                if (!user?.geminiApiKey) return alert("Hinterlege deinen Key in den Einstellungen!");
                 setIsThinking(true);
                 try {
-                    let prompt = `Analysiere das Gericht "${text || 'auf dem Bild'}". Schätze die Nährwerte für EINE Portion. Gib NUR valides JSON zurück: {"name":"..","calories":0,"protein":0,"carbs":0,"sugar":0,"fat":0,"saturatedFat":0,"unsaturatedFat":0,"unit":"Portion"}`;
+                    let prompt = `Analysiere das Gericht "${text || 'auf dem Bild'}". Schätze die Nährwerte für EINE normale Portion. Gib NUR valides JSON zurück: {"name":"Name des Gerichts","calories":Zahl,"protein":Zahl,"carbs":Zahl,"sugar":Zahl,"fat":Zahl,"saturatedFat":Zahl,"unsaturatedFat":Zahl,"unit":"Portion"}`;
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
 
@@ -210,7 +233,8 @@
                     });
                     const data = await res.json();
                     if(data.error) throw new Error(data.error.message);
-                    const json = JSON.parse(data.candidates[0].content.parts[0].text.match(/\{[\s\S]*\}/s)[0]);
+                    const jsonStr = data.candidates[0].content.parts[0].text.match(/\{[\s\S]*\}/s)[0];
+                    const json = JSON.parse(jsonStr);
                     setApiResults([{ ...json, id: Date.now(), isAi: true, image: img }]);
                     setShowAiModal(false);
                     setAiImage(null);
@@ -229,52 +253,38 @@
             };
 
             return (
-                <div className="max-w-md mx-auto min-h-screen relative pb-32">
+                <div className="max-w-md mx-auto min-h-screen relative pb-36">
                     
                     {/* DETAILS MODAL */}
                     {showDetails && (
-                        <div className="fixed inset-0 bg-slate-950/95 z-[130] flex items-center justify-center p-6 backdrop-blur-xl">
-                            <div className="w-full glass-card rounded-[3rem] p-8 space-y-6">
+                        <div className="fixed inset-0 bg-slate-950/95 z-[130] flex items-center justify-center p-6 backdrop-blur-xl animate-in fade-in duration-200">
+                            <div className="w-full glass-card rounded-[3rem] p-8 space-y-6 shadow-2xl">
                                 <div className="flex justify-between items-start">
-                                    <h3 className="text-2xl font-black">{showDetails.name}</h3>
-                                    <button onClick={() => setShowDetails(null)} className="p-2 bg-slate-800 rounded-full"><X size={20}/></button>
+                                    <h3 className="text-2xl font-black text-white">{showDetails.name}</h3>
+                                    <button onClick={() => setShowDetails(null)} className="p-2 bg-slate-800 rounded-full active:scale-90 transition-all"><X size={20}/></button>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5">
-                                        <div className="text-[10px] font-black text-slate-500 uppercase mb-1">Energie</div>
-                                        <div className="text-lg font-black text-brand-400">{showDetails.calories} kcal</div>
-                                    </div>
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5">
-                                        <div className="text-[10px] font-black text-slate-500 uppercase mb-1">Protein</div>
-                                        <div className="text-lg font-black text-fuchsia-400">{showDetails.protein}g</div>
-                                    </div>
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2">
-                                        <div className="text-[10px] font-black text-slate-500 uppercase mb-1">Kohlenhydrate</div>
-                                        <div className="text-lg font-black text-blue-400">{showDetails.carbs}g</div>
-                                        <div className="text-xs text-blue-300/60 mt-1">davon {showDetails.sugar}g Zucker</div>
-                                    </div>
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2">
-                                        <div className="text-[10px] font-black text-slate-500 uppercase mb-1">Fett</div>
-                                        <div className="text-lg font-black text-amber-400">{showDetails.fat}g</div>
-                                        <div className="text-xs text-amber-300/60 mt-1">{showDetails.saturatedFat}g gesättigt / {showDetails.unsaturatedFat}g ungesättigt</div>
-                                    </div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Energie</div><div className="text-lg font-black text-brand-400">{showDetails.calories} kcal</div></div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Protein</div><div className="text-lg font-black text-fuchsia-400">{showDetails.protein}g</div></div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Kohlenhydrate</div><div className="text-lg font-black text-blue-400">{showDetails.carbs}g</div><div className="text-xs text-blue-300/60 mt-1">davon {showDetails.sugar}g Zucker</div></div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Fett</div><div className="text-lg font-black text-amber-400">{showDetails.fat}g</div><div className="text-xs text-amber-300/60 mt-1">{showDetails.saturatedFat}g gesättigt</div></div>
                                 </div>
-                                <button onClick={() => setShowDetails(null)} className="w-full py-4 bg-brand-600 rounded-2xl font-black uppercase tracking-widest">Schließen</button>
+                                <button onClick={() => setShowDetails(null)} className="w-full py-4 bg-brand-600 text-white rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-all">Fertig</button>
                             </div>
                         </div>
                     )}
 
-                    {/* AI PHOTO DESCRIPTION MODAL */}
+                    {/* AI PHOTO MODAL */}
                     {showAiModal && (
                         <div className="fixed inset-0 bg-slate-950/95 z-[110] flex items-center justify-center p-6 backdrop-blur-xl">
                             <div className="w-full glass-card rounded-[2.5rem] p-8 space-y-6">
-                                <h3 className="text-xl font-black flex items-center gap-3"><Camera className="text-brand-400"/> Foto-Info</h3>
-                                <img src={aiImage} className="w-full h-40 object-cover rounded-2xl border border-white/10" />
-                                <textarea placeholder="Zusätzliche Infos für die KI..." value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-4 bg-slate-800 rounded-2xl border border-white/5 focus:ring-2 focus:ring-brand-500 outline-none text-sm h-24" />
+                                <h3 className="text-xl font-black flex items-center gap-3 text-white"><Camera className="text-brand-400"/> Foto-Details</h3>
+                                <img src={aiImage} className="w-full h-44 object-cover rounded-3xl border border-white/10 shadow-2xl" />
+                                <textarea placeholder="Gibt es Besonderheiten? (z.B. große Portion, extra Soße...)" value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none text-sm h-28 font-medium text-white shadow-inner" />
                                 <div className="flex gap-3">
-                                    <button onClick={() => setShowAiModal(false)} className="flex-1 py-4 bg-slate-800 rounded-2xl font-bold text-sm">Abbruch</button>
-                                    <button onClick={() => askGemini(aiDesc, aiImage)} disabled={isThinking} className="flex-1 py-4 bg-brand-500 text-slate-950 rounded-2xl font-black flex items-center justify-center gap-2">
-                                        {isThinking ? <Loader size={18}/> : "OK"}
+                                    <button onClick={() => {setShowAiModal(false); setAiImage(null);}} className="flex-1 py-4 bg-slate-800 text-slate-300 rounded-2xl font-bold text-sm">Abbrechen</button>
+                                    <button onClick={() => askGemini(aiDesc, aiImage)} disabled={isThinking} className="flex-1 py-4 bg-brand-500 text-slate-950 rounded-2xl font-black flex items-center justify-center gap-2 active:scale-95 transition-all">
+                                        {isThinking ? <Loader size={18}/> : "Analysieren"}
                                     </button>
                                 </div>
                             </div>
@@ -284,103 +294,93 @@
                     {/* MENGEN MODAL */}
                     {selectedFood && (
                         <div className="fixed inset-0 bg-slate-950/90 z-[100] flex items-end backdrop-blur-sm p-4">
-                            <div className="w-full glass-card rounded-[3rem] p-8 animate-in slide-in-from-bottom shadow-2xl">
-                                <div className="flex justify-between items-center mb-8">
-                                    <h3 className="text-2xl font-black">{selectedFood.name}</h3>
-                                    <button onClick={() => setSelectedFood(null)} className="p-2 bg-slate-800 rounded-full"><X size={20}/></button>
+                            <div className="w-full glass-card rounded-[3rem] p-8 animate-in slide-in-from-bottom shadow-2xl border-t border-white/10 max-w-md mx-auto">
+                                <div className="flex justify-between items-center mb-10">
+                                    <h3 className="text-2xl font-black text-white">{selectedFood.name}</h3>
+                                    <button onClick={() => setSelectedFood(null)} className="p-2 bg-slate-800 rounded-full active:scale-90 transition-all"><X size={20}/></button>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4 mb-8">
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 text-center">
-                                        <div className="text-[10px] font-black text-slate-500 uppercase">Energie</div>
-                                        <div className="text-xl font-black text-white">{selectedFood.calories} kcal</div>
-                                    </div>
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 text-center">
-                                        <div className="text-[10px] font-black text-slate-500 uppercase">Portion</div>
-                                        <div className="text-xl font-black text-white">{selectedFood.unit}</div>
-                                    </div>
+                                <div className="grid grid-cols-2 gap-4 mb-10">
+                                    <div className="p-5 bg-slate-900 rounded-[1.5rem] border border-white/5 text-center shadow-inner"><div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Energie</div><div className="text-2xl font-black text-white">{selectedFood.calories} <span className="text-xs text-slate-600">kcal</span></div></div>
+                                    <div className="p-5 bg-slate-900 rounded-[1.5rem] border border-white/5 text-center shadow-inner"><div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Portion</div><div className="text-2xl font-black text-white">{selectedFood.unit}</div></div>
                                 </div>
-                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-brand-500 text-slate-950 py-5 rounded-[1.5rem] font-black uppercase tracking-widest active:scale-95 transition-all shadow-xl shadow-brand-500/20">Bestätigen</button>
+                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] active:scale-95 transition-all shadow-xl shadow-brand-500/20">Zum Tagebuch</button>
                             </div>
                         </div>
                     )}
 
-                    {/* VIEWS */}
-                    {view === 'onboarding' && (
-                        <div className="p-10 pt-24 text-center">
-                            <div className="inline-block p-6 bg-brand-500/10 rounded-[2.5rem] mb-8 border border-brand-500/20"><Utensils size={48} className="text-brand-400"/></div>
-                            <h1 className="text-4xl font-black mb-4 tracking-tighter text-white">KaloTrack</h1>
-                            <p className="text-slate-500 font-bold mb-12 uppercase text-[10px] tracking-[0.2em]">Dein smarter Begleiter</p>
-                            <div className="space-y-4 max-w-xs mx-auto">
-                                <input type="number" placeholder="Ziel Kalorien (kcal)" onChange={e => setUser({...user, target: Number(e.target.value), targetP: 150, targetC: 250, targetF: 70, targetS: 50})} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 text-center font-bold" />
-                                <input type="password" placeholder="Gemini API Key" onChange={e => setUser({...user, geminiApiKey: e.target.value})} className="w-full p-5 bg-slate-900 border border-fuchsia-500/20 rounded-2xl text-xs font-mono text-center" />
-                                <button onClick={() => setView('dashboard')} className="w-full bg-brand-600 py-5 rounded-2xl font-black uppercase tracking-widest mt-4 shadow-xl active:scale-95 transition-all">Starten</button>
-                            </div>
-                        </div>
-                    )}
-
+                    {/* VIEW: DASHBOARD */}
                     {view === 'dashboard' && (
-                        <div className="p-6">
-                            <div className="flex justify-between items-center mb-8 mt-4">
+                        <div className="p-6 animate-in fade-in duration-500">
+                            <div className="flex justify-between items-center mb-8 mt-6">
                                 <div>
-                                    <h2 className="text-3xl font-black tracking-tight text-white">Heute</h2>
-                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">{new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'long' })}</p>
+                                    <h2 className="text-3xl font-black tracking-tight text-white italic">KaloTrack</h2>
+                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mt-1">{new Date().toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long' })}</p>
                                 </div>
-                                <button onClick={() => setView('profile')} className="p-4 glass-card rounded-2xl border border-white/10 active:scale-90 transition-all"><UserIcon size={24} className="text-brand-400"/></button>
+                                <button onClick={() => setView('profile')} className="p-4 glass-card rounded-[1.5rem] border border-white/10 active:scale-90 transition-all shadow-lg"><UserIcon size={24} className="text-brand-400"/></button>
                             </div>
 
-                            <div className="glass-card rounded-[2.5rem] p-8 mb-10 shadow-2xl border border-white/10 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 blur-3xl -z-10"></div>
+                            <div className="glass-card rounded-[3rem] p-8 mb-10 shadow-2xl border border-white/10 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-40 h-40 bg-brand-500/10 blur-3xl -z-10"></div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 items-center">
-                                    <ProgressRing consumed={totals.kcal} target={user?.target || 2000} />
-                                    <div className="space-y-3">
-                                        <MacroTile label="Protein" value={totals.p} color="text-fuchsia-400" />
-                                        <MacroTile label="Kohlenhydrate" value={totals.c} subLabel="Zucker" subValue={totals.s} color="text-blue-400" subColor="text-blue-300" />
-                                        <MacroTile label="Fett" value={totals.f} subLabel="Gesättigt" subValue={totals.sf} color="text-amber-400" subColor="text-amber-300" />
+                                    <ProgressRing consumed={totals.kcal} target={user.target} />
+                                    <div className="space-y-4">
+                                        <MacroBar label="Protein" value={totals.p} target={user.targetP} colorClass="bg-fuchsia-500 shadow-[0_0_10px_rgba(217,70,239,0.3)]" />
+                                        <MacroBar label="Kohlenhydrate" value={totals.c} target={user.targetC} colorClass="bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]" />
+                                        <MacroBar label="Fett" value={totals.f} target={user.targetF} colorClass="bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]" />
+                                        <MacroBar label="Zucker" value={totals.s} target={user.targetS} colorClass="bg-blue-300 shadow-[0_0_10px_rgba(147,197,253,0.3)]" />
                                     </div>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
-                                <div className="flex justify-between items-center px-2">
-                                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Verlauf</h3>
-                                    <span className="text-[10px] font-black text-brand-500/50 uppercase">{dailyLog.items.length} Posten</span>
+                                <div className="flex justify-between items-center px-4">
+                                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Mein Tag</h3>
+                                    <span className="text-[10px] font-black text-brand-400 uppercase">{dailyLog.items.length} Posten</span>
                                 </div>
-                                <div className="space-y-3">
-                                    {[...dailyLog.items].reverse().map(item => (
-                                        <div key={item.instanceId} className="glass-card p-4 rounded-[1.8rem] flex justify-between items-center group animate-in slide-in-from-right duration-300 cursor-pointer active:scale-[0.98] transition-all" onClick={() => setShowDetails(item)}>
-                                            <div className="flex items-center gap-4">
-                                                {item.image ? <img src={item.image} className="w-14 h-14 rounded-2xl object-cover border border-white/10" /> : <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600"><Utensils size={24}/></div>}
-                                                <div>
-                                                    <div className="font-bold text-white tracking-tight">{item.name}</div>
-                                                    <div className="text-[10px] font-black text-slate-500 uppercase mt-0.5">{item.calories} kcal <span className="opacity-30">•</span> {item.protein}g P</div>
+                                {dailyLog.items.length === 0 ? (
+                                    <div className="text-center py-20 bg-slate-900/20 rounded-[2.5rem] border border-dashed border-white/5 opacity-50">
+                                        <Utensils size={40} className="mx-auto text-slate-700 mb-4" />
+                                        <p className="text-slate-600 font-bold uppercase text-[10px] tracking-widest text-center">Tagebuch ist leer</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {[...dailyLog.items].reverse().map(item => (
+                                            <div key={item.instanceId} className="glass-card p-4 rounded-[1.8rem] flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer shadow-lg border border-white/5" onClick={() => setShowDetails(item)}>
+                                                <div className="flex items-center gap-4">
+                                                    {item.image ? <img src={item.image} className="w-14 h-14 rounded-2xl object-cover border border-white/10 shadow-md" /> : <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600 border border-white/5"><Utensils size={24}/></div>}
+                                                    <div>
+                                                        <div className="font-bold text-white tracking-tight">{item.name}</div>
+                                                        <div className="text-[10px] font-black text-slate-500 uppercase mt-0.5">{item.calories} kcal <span className="text-slate-700 mx-1">•</span> {item.protein}g Protein</div>
+                                                    </div>
                                                 </div>
+                                                <button onClick={(e) => { e.stopPropagation(); setDailyLog(prev => ({...prev, items: prev.items.filter(i => i.instanceId !== item.instanceId)})); }} className="p-3 text-slate-700 hover:text-rose-500 active:scale-75 transition-all"><Trash2 size={20}/></button>
                                             </div>
-                                            <button onClick={(e) => { e.stopPropagation(); setDailyLog(prev => ({...prev, items: prev.items.filter(i => i.instanceId !== item.instanceId)})); }} className="p-3 text-slate-600 hover:text-rose-500 active:scale-75 transition-all"><Trash2 size={20}/></button>
-                                        </div>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
 
+                    {/* VIEW: ADD FOOD */}
                     {view === 'addFood' && (
-                        <div className="p-6">
-                            <div className="flex items-center gap-4 mb-8 mt-4">
-                                <button onClick={() => { setView('dashboard'); setApiResults([]); }} className="p-4 glass-card rounded-2xl active:scale-90 transition-all"><ArrowLeft size={24}/></button>
-                                <h2 className="text-3xl font-black tracking-tight">Hinzufügen</h2>
+                        <div className="p-6 animate-in slide-in-from-bottom duration-300">
+                            <div className="flex items-center gap-4 mb-10 mt-4">
+                                <button onClick={() => { setView('dashboard'); setApiResults([]); }} className="p-4 glass-card rounded-2xl active:scale-90 transition-all border border-white/5"><ArrowLeft size={24}/></button>
+                                <h2 className="text-3xl font-black tracking-tight text-white">Essen tracken</h2>
                             </div>
                             
                             <div className="space-y-5 mb-10">
-                                <div className="relative group">
-                                    <input type="text" placeholder="Essen beschreiben..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/10 rounded-2xl outline-none focus:ring-4 focus:ring-brand-500/20 text-white font-bold transition-all" />
-                                    <button onClick={() => setIsScanning(true)} className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-brand-600 rounded-xl shadow-lg active:scale-90" title="Barcode"><ScanBarcode size={22} className="text-white"/></button>
+                                <div className="relative">
+                                    <input type="text" placeholder="Was hast du gegessen?..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full p-6 bg-slate-900 border border-white/10 rounded-3xl outline-none focus:ring-4 focus:ring-brand-500/20 text-white font-bold transition-all shadow-inner" />
+                                    <button onClick={startScanner} className="absolute right-3 top-1/2 -translate-y-1/2 p-4 bg-brand-600 rounded-2xl shadow-xl active:scale-90 transition-all border border-white/10"><ScanBarcode size={24} className="text-slate-950"/></button>
                                 </div>
-                                <div className="flex gap-3">
-                                    <button onClick={() => askGemini(searchQuery)} disabled={isThinking || searchQuery.length < 2} className="flex-1 bg-slate-900 hover:bg-slate-800 border border-white/10 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-30">
-                                        {isThinking ? <Loader size={14}/> : <Sparkles size={14} className="text-brand-400"/>} AI Text
+                                <div className="flex gap-4">
+                                    <button onClick={() => askGemini(searchQuery)} disabled={isThinking || searchQuery.length < 2} className="flex-1 bg-slate-900 hover:bg-slate-800 border border-white/10 text-white py-5 rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all disabled:opacity-30">
+                                        {isThinking ? <Loader size={16}/> : <Sparkles size={16} className="text-brand-400"/>} AI Text
                                     </button>
-                                    <button onClick={() => aiFileRef.current.click()} disabled={isThinking} className="flex-1 bg-brand-600 text-slate-950 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg active:scale-95">
-                                        {isThinking ? <Loader size={14}/> : <Camera size={14}/>} AI Foto
+                                    <button onClick={() => aiFileRef.current.click()} disabled={isThinking} className="flex-1 bg-brand-500 text-slate-950 py-5 rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl active:scale-95 transition-all">
+                                        {isThinking ? <Loader size={16}/> : <Camera size={16}/>} AI Foto
                                     </button>
                                 </div>
                                 <input type="file" accept="image/*" capture="environment" ref={aiFileRef} className="hidden" onChange={async e => {
@@ -394,12 +394,12 @@
 
                             <div className="space-y-4">
                                 {apiResults.map(f => (
-                                    <div key={f.id || 'res'} onClick={() => setSelectedFood(f)} className="glass-card p-5 rounded-[2rem] flex justify-between items-center animate-in zoom-in border-brand-500/20 active:scale-98 transition-all cursor-pointer">
-                                        <div className="flex items-center gap-5">
-                                            {f.image ? <img src={f.image} className="w-16 h-14 rounded-2xl object-cover border border-white/10" /> : <div className="w-16 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600"><Utensils size={28}/></div>}
+                                    <div key={f.id || 'res'} onClick={() => setSelectedFood(f)} className="glass-card p-6 rounded-[2.5rem] flex justify-between items-center animate-in zoom-in border-brand-500/20 active:scale-98 transition-all cursor-pointer shadow-xl">
+                                        <div className="flex items-center gap-6">
+                                            {f.image ? <img src={f.image} className="w-16 h-16 rounded-2xl object-cover border border-white/10 shadow-lg" /> : <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600 border border-white/5 shadow-inner"><Utensils size={28}/></div>}
                                             <div>
-                                                <div className="font-bold text-lg text-white">{f.name}</div>
-                                                <div className="text-xs font-black text-slate-500 uppercase tracking-widest">{f.calories} kcal <span className="opacity-30">/</span> {f.unit}</div>
+                                                <div className="font-bold text-xl text-white tracking-tight">{f.name}</div>
+                                                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">{f.calories} kcal <span className="mx-2 opacity-20">|</span> {f.unit}</div>
                                             </div>
                                         </div>
                                         <div className="bg-brand-500 text-slate-950 p-3 rounded-2xl shadow-lg"><Plus size={24} strokeWidth={4}/></div>
@@ -409,47 +409,57 @@
                         </div>
                     )}
 
+                    {/* VIEW: PROFILE / SETTINGS */}
                     {view === 'profile' && (
-                        <div className="p-6">
+                        <div className="p-6 animate-in slide-in-from-right duration-300">
                             <div className="flex items-center gap-4 mb-10 mt-4">
-                                <button onClick={() => setView('dashboard')} className="p-4 glass-card rounded-2xl active:scale-90 transition-all"><ArrowLeft size={24}/></button>
-                                <h2 className="text-3xl font-black tracking-tight text-white">Ziele</h2>
+                                <button onClick={() => setView('dashboard')} className="p-4 glass-card rounded-2xl active:scale-90 transition-all border border-white/5"><ArrowLeft size={24}/></button>
+                                <h2 className="text-3xl font-black tracking-tight text-white">Meine Ziele</h2>
                             </div>
-                            <div className="glass-card p-8 rounded-[2.5rem] space-y-6 shadow-2xl overflow-y-auto max-h-[70vh]">
-                                <div className="grid grid-cols-1 gap-6">
-                                    <GoalInput label="Kalorien" value={user?.target} unit="kcal" onChange={v => setUser({...user, target: v})} />
-                                    <GoalInput label="Protein" value={user?.targetP} unit="g" color="text-fuchsia-400" onChange={v => setUser({...user, targetP: v})} />
-                                    <GoalInput label="Kohlenhydrate" value={user?.targetC} unit="g" color="text-blue-400" onChange={v => setUser({...user, targetC: v})} />
-                                    <GoalInput label="Fett" value={user?.targetF} unit="g" color="text-amber-400" onChange={v => setUser({...user, targetF: v})} />
-                                    <GoalInput label="Zucker" value={user?.targetS} unit="g" color="text-blue-300" onChange={v => setUser({...user, targetS: v})} />
+                            <div className="glass-card p-8 rounded-[3rem] space-y-8 shadow-2xl border border-white/10">
+                                <div className="space-y-6">
+                                    <GoalInput label="Energie (Tagesziel)" value={user.target} unit="kcal" color="text-brand-400" onChange={v => setUser(prev => ({...prev, target: v}))} />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <GoalInput label="Protein" value={user.targetP} unit="g" color="text-fuchsia-400" onChange={v => setUser(prev => ({...prev, targetP: v}))} />
+                                        <GoalInput label="Kohlenhydrate" value={user.targetC} unit="g" color="text-blue-400" onChange={v => setUser(prev => ({...prev, targetC: v}))} />
+                                        <GoalInput label="Fett" value={user.targetF} unit="g" color="text-amber-400" onChange={v => setUser(prev => ({...prev, targetF: v}))} />
+                                        <GoalInput label="Zucker" value={user.targetS} unit="g" color="text-blue-300" onChange={v => setUser(prev => ({...prev, targetS: v}))} />
+                                    </div>
                                 </div>
-                                <div className="pt-6 border-t border-white/5 space-y-4">
-                                    <label className="text-[10px] font-black text-fuchsia-400 uppercase block">Gemini API Key</label>
-                                    <input type="password" value={user?.geminiApiKey} onChange={e => setUser({...user, geminiApiKey: e.target.value})} className="w-full p-4 bg-slate-800 rounded-2xl font-mono text-xs shadow-inner outline-none" />
-                                    <button onClick={() => { if(confirm("App zurücksetzen?")) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-rose-500/10 border border-rose-500/20 text-rose-500 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest mt-4">App zurücksetzen</button>
+                                <div className="pt-8 border-t border-white/5 space-y-6">
+                                    <div>
+                                        <label className="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest block mb-2 px-1">Gemini API Key</label>
+                                        <input type="password" value={user.geminiApiKey} onChange={e => setUser(prev => ({...prev, geminiApiKey: e.target.value}))} className="w-full p-4 bg-slate-800 rounded-2xl font-mono text-[10px] shadow-inner outline-none border border-white/5 text-white" placeholder="AIzaSy..." />
+                                    </div>
+                                    <button onClick={() => { if(confirm("Wirklich alles zurücksetzen?")) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-rose-500/5 border border-rose-500/20 text-rose-500 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:bg-rose-500/10 transition-all"><Trash2 size={16}/> App Zurücksetzen</button>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* NAV */}
-                    <div className="fixed bottom-8 left-0 right-0 px-8 pointer-events-none z-[80]">
-                        <div className="max-w-xs mx-auto h-20 glass-card rounded-[2.5rem] flex items-center justify-around pointer-events-auto shadow-2xl border-t border-white/10 p-2">
-                            <button onClick={() => setView('dashboard')} className={`p-4 rounded-2xl transition-all ${view==='dashboard'?'text-brand-400 bg-brand-500/10':'text-slate-600'}`}><Home size={28}/></button>
-                            <button onClick={() => setView('addFood')} className="bg-brand-500 text-slate-950 p-5 rounded-3xl -top-10 relative border-[6px] border-slate-950 shadow-2xl active:scale-90 transition-all"><Plus size={32} strokeWidth={4}/></button>
-                            <button onClick={() => setView('profile')} className={`p-4 rounded-2xl transition-all ${view==='profile'?'text-brand-400 bg-brand-500/10':'text-slate-600'}`}><UserIcon size={28}/></button>
+                    {/* NAVIGATION */}
+                    <div className="fixed bottom-10 left-0 right-0 px-10 pointer-events-none z-[80]">
+                        <div className="max-w-xs mx-auto h-22 glass-card rounded-[2.5rem] flex items-center justify-around pointer-events-auto shadow-[0_20px_60px_rgba(0,0,0,0.7)] border-t border-white/10 p-2">
+                            <button onClick={() => { setView('dashboard'); setApiResults([]); }} className={`p-4 rounded-2xl transition-all ${view==='dashboard'?'text-brand-400 bg-brand-500/10':'text-slate-600'}`}><Home size={30}/></button>
+                            <button onClick={() => setView('addFood')} className="bg-brand-500 text-slate-950 p-5 rounded-3xl -top-12 relative border-[8px] border-slate-950 shadow-2xl active:scale-90 transition-all"><Plus size={36} strokeWidth={4}/></button>
+                            <button onClick={() => setView('profile')} className={`p-4 rounded-2xl transition-all ${view==='profile'?'text-brand-400 bg-brand-500/10':'text-slate-600'}`}><UserIcon size={30}/></button>
                         </div>
                     </div>
 
-                    {/* BARCODE MODAL */}
+                    {/* SCANNER MODAL */}
                     {isScanning && (
-                        <div className="fixed inset-0 bg-slate-950 z-[140] flex flex-col items-center justify-center p-6 backdrop-blur-3xl">
-                            <div className="w-full max-w-md glass-card rounded-[3rem] overflow-hidden">
-                                <div className="flex justify-between items-center p-8">
-                                    <h3 className="font-black text-xl">Barcode Scan</h3>
-                                    <button onClick={() => setIsScanning(false)} className="p-2 bg-slate-800 rounded-full"><X/></button>
+                        <div className="fixed inset-0 bg-slate-950 z-[140] flex flex-col items-center justify-center p-6 backdrop-blur-3xl animate-in zoom-in duration-300">
+                            <div className="w-full max-w-md glass-card rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl">
+                                <div className="flex justify-between items-center p-8 bg-slate-900/50">
+                                    <h3 className="font-black text-xl text-white tracking-tight flex items-center gap-3"><ScanBarcode size={24} className="text-brand-400"/> Scan</h3>
+                                    <button onClick={stopScanner} className="p-2 bg-slate-800 rounded-full active:scale-90 transition-all"><X size={20}/></button>
                                 </div>
-                                <div className="p-6"><div id="qr-reader" className="w-full aspect-square bg-black rounded-[2rem]"></div></div>
+                                <div className="p-6">
+                                    <div id="qr-reader" className="w-full aspect-square bg-black rounded-3xl shadow-inner overflow-hidden border-4 border-slate-900"></div>
+                                </div>
+                                <div className="p-8 text-center bg-slate-900/50">
+                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Barcode im Rahmen positionieren</p>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -458,11 +468,16 @@
         }
 
         const GoalInput = ({ label, value, unit, color="text-white", onChange }) => (
-            <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">{label}</label>
-                <div className="relative">
-                    <input type="number" value={value || 0} onChange={e => onChange(Number(e.target.value))} className={`w-full p-4 bg-slate-800 rounded-2xl font-black text-xl outline-none focus:ring-2 focus:ring-brand-500 shadow-inner ${color}`} />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 font-bold uppercase text-[10px]">{unit}</span>
+            <div className="space-y-2">
+                <label className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] block px-1">{label}</label>
+                <div className="relative group">
+                    <input 
+                        type="number" 
+                        value={value} 
+                        onChange={e => onChange(Number(e.target.value))} 
+                        className={`w-full p-5 bg-slate-900/50 border border-white/5 rounded-2xl font-black text-xl outline-none focus:ring-2 focus:ring-brand-500/50 shadow-inner transition-all ${color}`} 
+                    />
+                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-600 font-bold uppercase text-[9px]">{unit}</span>
                 </div>
             </div>
         );
