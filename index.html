@@ -187,15 +187,14 @@
 
             const handleSafeAction = (fn) => (e) => {
                 if (e) {
-                    // Important: Don't preventDefault here as it might block the blur
+                    e.preventDefault();
                     e.stopPropagation();
                 }
-                // Force blur to fix layout before action
                 if (document.activeElement && document.activeElement.tagName !== 'BODY') {
                     document.activeElement.blur();
                 }
-                // Execute immediately in next tick
-                setTimeout(fn, 0);
+                // Delay allows keyboard to start closing and layout to snap back
+                setTimeout(fn, 100);
             };
 
             const totals = useMemo(() => dailyLog.items.reduce((acc, i) => ({
@@ -568,8 +567,14 @@
                                     <h3 className="text-xl font-black flex items-center gap-3"><CameraIcon className="text-brand-400"/> Foto-Info</h3>
                                     <button type="button" onClick={() => {setShowAiModal(false); setAiImage(null);}} className="p-2 bg-slate-800 rounded-full active:opacity-80"><XIcon size={20}/></button>
                                 </div>
-                                <img src={aiImage} className="w-full h-32 object-cover rounded-3xl border border-white/10 shadow-2xl" />
-                                <textarea placeholder="Was genau ist zu sehen?..." value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none text-sm h-24 font-medium text-white shadow-inner" />
+                                <img src={aiImage} className="w-full h-24 object-cover rounded-3xl border border-white/10 shadow-2xl" />
+                                <textarea 
+                                    placeholder="Was genau ist zu sehen?..." 
+                                    value={aiDesc} 
+                                    onChange={e => setAiDesc(e.target.value)} 
+                                    onBlur={() => window.scrollTo(0, 0)}
+                                    className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none text-sm h-20 font-medium text-white shadow-inner" 
+                                />
                                 <div className="flex flex-col gap-3">
                                     <button type="button" 
                                         onPointerDown={handleSafeAction(() => !isThinking && askGemini(aiDesc, aiImage))}
