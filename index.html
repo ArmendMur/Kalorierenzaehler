@@ -174,13 +174,28 @@
             useEffect(() => { localStorage.setItem('kTrackLog', JSON.stringify(dailyLog)); }, [dailyLog]);
             useEffect(() => { localStorage.setItem('kTrackHistory', JSON.stringify(itemHistory)); }, [itemHistory]);
 
+            // BODY SCROLL LOCK: Fixes hit-testing issues on mobile
+            useEffect(() => {
+                const isModalOpen = !!(selectedFood || showAiModal || showDetails || isScanning);
+                document.body.style.overflow = isModalOpen ? 'hidden' : '';
+                document.body.style.touchAction = isModalOpen ? 'none' : '';
+                return () => {
+                    document.body.style.overflow = '';
+                    document.body.style.touchAction = '';
+                };
+            }, [selectedFood, showAiModal, showDetails, isScanning]);
+
             const handleSafeAction = (fn) => (e) => {
                 if (e) {
                     e.preventDefault();
                     e.stopPropagation();
                 }
-                if (document.activeElement) document.activeElement.blur();
-                fn();
+                // Dismiss keyboard immediately to stabilize layout
+                if (document.activeElement && document.activeElement.tagName !== 'BODY') {
+                    document.activeElement.blur();
+                }
+                // Small delay to allow layout to settle after keyboard dismiss
+                setTimeout(fn, 10);
             };
 
             const totals = useMemo(() => dailyLog.items.reduce((acc, i) => ({
