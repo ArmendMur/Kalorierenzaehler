@@ -190,10 +190,10 @@
 
                         if (data.products) {
                             const formatted = data.products
-                                .filter(p => p.product_name)
+                                .filter(p => p.product_name || p.generic_name)
                                 .map(p => ({
                                     id: p._id || p.code || Math.random(),
-                                    name: p.product_name,
+                                    name: p.product_name || p.generic_name_de || p.generic_name || "Unbekannt",
                                     calories: Math.round(p.nutriments['energy-kcal_100g'] || 0),
                                     protein: p.nutriments.proteins_100g || 0,
                                     carbs: p.nutriments.carbohydrates_100g || 0,
@@ -598,7 +598,15 @@
                             <div className="space-y-3 mt-4">
                                 {isSearching && <div className="text-center py-4 animate-pulse text-brand-400 font-black text-xs uppercase tracking-widest">Suche läuft...</div>}
                                 {!isSearching && searchQuery.length >= 2 && apiResults.length === 0 && (
-                                    <div className="text-center py-10 opacity-30 italic text-sm">Keine Produkte gefunden</div>
+                                    <div className="text-center py-10 space-y-4">
+                                        <div className="opacity-30 italic text-sm">Keine Produkte gefunden</div>
+                                        <button 
+                                            onClick={() => askGemini(searchQuery)}
+                                            className="mx-auto flex items-center gap-2 px-6 py-3 bg-slate-900 border border-brand-500/30 rounded-2xl text-xs font-black uppercase tracking-widest text-brand-400 active:scale-95 transition-all"
+                                        >
+                                            <SparklesIcon size={14}/> Mit KI schätzen
+                                        </button>
+                                    </div>
                                 )}
                                 {apiResults.map(f => (
                                     <div key={f.id} onClick={() => setSelectedFood(f)} className="glass-card p-4 rounded-[2rem] flex justify-between items-center animate-in zoom-in cursor-pointer active:scale-98">
