@@ -173,6 +173,7 @@
 
             // REAL-TIME SEARCH LOGIC
             useEffect(() => {
+                let isCurrent = true;
                 if (searchQuery.length < 2) {
                     setApiResults([]);
                     setIsSearching(false);
@@ -182,8 +183,11 @@
                 setIsSearching(true);
                 const timeout = setTimeout(async () => {
                     try {
-                        const res = await fetch(`https://de.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchQuery)}&search_simple=1&action=process&json=1&page_size=20`, { signal: controller.signal });
+                        const res = await fetch(`https://de.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchQuery)}&search_simple=1&action=process&json=1&page_size=30`, { signal: controller.signal });
                         const data = await res.json();
+                        
+                        if (!isCurrent) return;
+
                         if (data.products) {
                             const formatted = data.products
                                 .filter(p => p.product_name)
@@ -201,14 +205,17 @@
                                     image: p.image_front_small_url || p.image_small_url
                                 }));
                             setApiResults(formatted);
+                        } else {
+                            setApiResults([]);
                         }
                     } catch (e) { 
-                        if (e.name !== 'AbortError') console.error("Suche fehlgeschlagen", e); 
+                        if (e.name !== 'AbortError' && isCurrent) console.error("Suche fehlgeschlagen", e); 
                     } finally {
-                        setIsSearching(false);
+                        if (isCurrent) setIsSearching(false);
                     }
-                }, 200);
+                }, 300); // Etwas entspannter für die API
                 return () => {
+                    isCurrent = false;
                     clearTimeout(timeout);
                     controller.abort();
                 };
@@ -590,6 +597,9 @@
                             {/* SEARCH RESULTS */}
                             <div className="space-y-3 mt-4">
                                 {isSearching && <div className="text-center py-4 animate-pulse text-brand-400 font-black text-xs uppercase tracking-widest">Suche läuft...</div>}
+                                {!isSearching && searchQuery.length >= 2 && apiResults.length === 0 && (
+                                    <div className="text-center py-10 opacity-30 italic text-sm">Keine Produkte gefunden</div>
+                                )}
                                 {apiResults.map(f => (
                                     <div key={f.id} onClick={() => setSelectedFood(f)} className="glass-card p-4 rounded-[2rem] flex justify-between items-center animate-in zoom-in cursor-pointer active:scale-98">
                                         <div className="flex items-center gap-4">
