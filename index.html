@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kalorien-Zähler – Pro</title>
+    <title>Kalorien-Zähler – Ultimate</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,6 +23,14 @@
                     colors: { 
                         slate: { 850: '#151e2d', 950: '#070b14' },
                         brand: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed' }
+                    },
+                    animation: {
+                        'pop-in': 'pop-in 0.4s cubic-bezier(0.26, 0.53, 0.74, 1.48) forwards',
+                        'success-fade': 'success-fade 1.5s ease-out forwards'
+                    },
+                    keyframes: {
+                        'pop-in': { '0%': { transform: 'scale(0.8)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
+                        'success-fade': { '0%': { opacity: '0', transform: 'translateY(10px)' }, '20%': { opacity: '1', transform: 'translateY(0)' }, '80%': { opacity: '1' }, '100%': { opacity: '0' } }
                     }
                 }
             }
@@ -32,10 +40,10 @@
     <style>
         body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; background-color: #070b14; color: #f8fafc; font-family: 'Inter', sans-serif; }
         .glass-card { background: rgba(21, 30, 45, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #qr-reader { border: none !important; width: 100% !important; background: black !important; }
-        #qr-reader video { border-radius: 1.5rem; object-fit: cover !important; width: 100% !important; }
+        #qr-reader video { border-radius: 1.5rem; object-fit: cover !important; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
@@ -58,7 +66,29 @@
         const SparklesIcon = (p) => <Icon d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" {...p} />;
         const BarcodeIcon = (p) => <Icon d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" {...p} />;
         const TrashIcon = (p) => <Icon d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" {...p} />;
-        const ArrowLeftIcon = (p) => <Icon d="m12 19-7-7 7-7M19 12H5" {...p} />;
+        const CheckIcon = (p) => <Icon d="m20 6-11 11-5-5" {...p} />;
+
+        // --- HELPERS ---
+        const resizeImage = (file) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800;
+                        const scale = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scale;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.6));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        };
 
         // --- COMPONENTS ---
         const ProgressRing = ({ consumed, target }) => {
@@ -70,8 +100,8 @@
             return (
                 <div className="relative flex items-center justify-center">
                     <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
-                        <circle stroke="#1e293b" strokeWidth={12} fill="transparent" r={normRadius} cx={radius} cy={radius} />
-                        <circle stroke="#8b5cf6" strokeWidth={12} strokeDasharray={circ} style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s' }} strokeLinecap="round" fill="transparent" r={normRadius} cx={radius} cy={radius} />
+                        <circle stroke="#1e293b" strokeWidth="12" fill="transparent" r={normRadius} cx={radius} cy={radius} />
+                        <circle stroke="#8b5cf6" strokeWidth="12" strokeDasharray={circ} style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s' }} strokeLinecap="round" fill="transparent" r={normRadius} cx={radius} cy={radius} />
                     </svg>
                     <div className="absolute text-center">
                         <div className="text-3xl font-black text-white tracking-tighter">{Math.max(0, Math.round(target - consumed))}</div>
@@ -112,13 +142,14 @@
             const [isThinking, setIsThinking] = useState(false);
             const [isScanning, setIsScanning] = useState(false);
             const [selectedFood, setSelectedFood] = useState(null);
-            const [showDetails, setShowDetails] = useState(null);
+            const [editingInstanceId, setEditingInstanceId] = useState(null);
             
             const [amount, setAmount] = useState(100);
             const [unit, setUnit] = useState('g');
             const [aiImage, setAiImage] = useState(null);
             const [aiDesc, setAiDesc] = useState('');
             const [showAiModal, setShowAiModal] = useState(false);
+            const [showSuccess, setShowSuccess] = useState(false);
 
             const aiFileRef = useRef();
             const qrInstance = useRef(null);
@@ -138,23 +169,19 @@
 
             const frequentItems = useMemo(() => {
                 const counts = {};
-                itemHistory.forEach(item => {
-                    const key = typeof item === 'string' ? item : item.name;
-                    counts[key] = (counts[key] || 0) + 1;
-                });
-                
+                itemHistory.forEach(name => counts[name] = (counts[name] || 0) + 1);
                 const uniqueFoods = [];
                 const seen = new Set();
                 [...dailyLog.items].reverse().forEach(item => {
                     if(!seen.has(item.name)) {
                         uniqueFoods.push({
                             name: item.name,
-                            calories: item.baseCalories || (item.calories / (item.amountFactor || 1)),
-                            protein: item.baseProtein || (item.protein / (item.amountFactor || 1)),
-                            carbs: item.baseCarbs || (item.carbs / (item.amountFactor || 1)),
-                            sugar: item.baseSugar || (item.sugar / (item.amountFactor || 1)),
-                            fat: item.baseFat || (item.fat / (item.amountFactor || 1)),
-                            saturatedFat: item.baseSaturatedFat || (item.saturatedFat / (item.amountFactor || 1)),
+                            calories: item.baseCalories,
+                            protein: item.baseProtein,
+                            carbs: item.baseCarbs,
+                            sugar: item.baseSugar,
+                            fat: item.baseFat,
+                            saturatedFat: item.baseSaturatedFat,
                             unit: '100g'
                         });
                         seen.add(item.name);
@@ -195,16 +222,15 @@
                             unit: '100g',
                             image: p.image_front_small_url
                         });
-                        setView('addFood');
                     } else { alert("Produkt nicht gefunden."); }
                 } catch (e) { alert("Barcode Fehler."); }
             };
 
             const askGemini = async (text, img = null) => {
-                if (!user.geminiApiKey) return alert("Key fehlt!");
+                if (!user.geminiApiKey) return alert("Hinterlege deinen Key im Profil!");
                 setIsThinking(true);
                 try {
-                    let prompt = `Analysiere das Gericht "${text || 'auf dem Bild'}". Schätze die Nährwerte PRO 100g oder 100ml. Gib NUR valides JSON: {"name":"Name","calories":0,"protein":0,"carbs":0,"sugar":0,"fat":0,"saturatedFat":0,"unit":"100g"}`;
+                    let prompt = `Analysiere das Gericht "${text || 'auf dem Bild'}". Schätze die Nährwerte PRO 100g/ml. Gib NUR JSON: {"name":"Name","calories":0,"protein":0,"carbs":0,"sugar":0,"fat":0,"saturatedFat":0,"unit":"100g"}`;
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
 
@@ -216,15 +242,16 @@
                     const data = await res.json();
                     const json = JSON.parse(data.candidates[0].content.parts[0].text.match(/\{[\s\S]*\}/s)[0]);
                     setSelectedFood({ ...json, id: Date.now(), isAi: true, image: img });
+                    setShowAiModal(false); setAiImage(null); setAiDesc('');
                 } catch (e) { alert("KI Fehler: " + e.message); }
-                finally { setIsThinking(false); setShowAiModal(false); }
+                finally { setIsThinking(false); }
             };
 
             const addEntry = (food) => {
                 const safeAmount = Number(amount) || 0;
                 const factor = safeAmount / 100;
                 const entry = { 
-                    ...food, instanceId: Date.now(),
+                    ...food, instanceId: editingInstanceId || Date.now(),
                     calories: Math.round(food.calories * factor),
                     protein: food.protein * factor, carbs: food.carbs * factor,
                     sugar: food.sugar * factor, fat: food.fat * factor,
@@ -234,31 +261,44 @@
                     baseCarbs: food.carbs, baseSugar: food.sugar,
                     baseFat: food.fat, baseSaturatedFat: food.saturatedFat
                 };
-                setDailyLog(prev => ({ ...prev, items: [...prev.items, entry] }));
-                setItemHistory(prev => [...prev, food.name]);
+                
+                if (editingInstanceId) {
+                    setDailyLog(prev => ({ ...prev, items: prev.items.map(i => i.instanceId === editingInstanceId ? entry : i) }));
+                } else {
+                    setDailyLog(prev => ({ ...prev, items: [...prev.items, entry] }));
+                    setItemHistory(prev => [...prev, food.name]);
+                }
+                
+                setShowSuccess(true);
+                setTimeout(() => setShowSuccess(false), 1500);
+                
                 setView('dashboard');
-                setSearchQuery(''); setApiResults([]); setSelectedFood(null); setAmount(100);
+                setSearchQuery(''); setApiResults([]); setSelectedFood(null); setEditingInstanceId(null); setAmount(100);
+            };
+
+            const handleDiaryClick = (item) => {
+                setSelectedFood({
+                    name: item.name,
+                    calories: item.baseCalories,
+                    protein: item.baseProtein,
+                    carbs: item.baseCarbs,
+                    sugar: item.baseSugar,
+                    fat: item.baseFat,
+                    saturatedFat: item.baseSaturatedFat,
+                    unit: '100g',
+                    image: item.image
+                });
+                setAmount(Math.round(item.amountFactor * 100));
+                setEditingInstanceId(item.instanceId);
             };
 
             return (
-                <div className="max-w-md mx-auto min-h-screen bg-slate-950 text-slate-100 p-6 pb-20">
+                <div className="max-w-md mx-auto min-h-screen bg-slate-950 text-slate-100 p-6 pb-24 relative overflow-hidden">
                     
-                    {/* MODAL: DETAILS */}
-                    {showDetails && (
-                        <div className="fixed inset-0 bg-slate-950/95 z-[200] flex items-center justify-center p-6 backdrop-blur-xl">
-                            <div className="w-full glass-card rounded-[3rem] p-8 space-y-6 animate-in zoom-in duration-200">
-                                <div className="flex justify-between items-start">
-                                    <h3 className="text-2xl font-black">{showDetails.name}</h3>
-                                    <button onClick={() => setShowDetails(null)} className="p-2 bg-slate-800 rounded-full"><XIcon size={20}/></button>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4 text-center">
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Energie</div><div className="text-xl font-black text-brand-400">{Math.round(showDetails.calories)}</div></div>
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Protein</div><div className="text-xl font-black text-fuchsia-400">{Math.round(showDetails.protein)}g</div></div>
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2 text-left"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Kohlenhydrate</div><div className="text-xl font-black text-blue-400">{Math.round(showDetails.carbs)}g <span className="text-xs text-blue-300/40 ml-2">davon {Math.round(showDetails.sugar)}g Zucker</span></div></div>
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2 text-left"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Fett</div><div className="text-xl font-black text-amber-400">{Math.round(showDetails.fat)}g <span className="text-xs text-amber-300/40 ml-2">davon {Math.round(showDetails.saturatedFat)}g gesättigt</span></div></div>
-                                </div>
-                                <button onClick={() => setShowDetails(null)} className="w-full py-4 bg-brand-600 rounded-2xl font-black uppercase tracking-widest shadow-lg">Schließen</button>
-                            </div>
+                    {/* SUCCESS OVERLAY */}
+                    {showSuccess && (
+                        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[300] bg-emerald-500 text-slate-950 px-8 py-4 rounded-full font-black flex items-center gap-3 shadow-2xl animate-success-fade">
+                            <CheckIcon size={24} /> Erledigt!
                         </div>
                     )}
 
@@ -268,27 +308,29 @@
                             <div className="w-full glass-card rounded-[3rem] p-8 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
                                 <div className="flex justify-between items-center mb-8">
                                     <h3 className="text-2xl font-black">{selectedFood.name}</h3>
-                                    <button onClick={() => setSelectedFood(null)} className="p-2 bg-slate-800 rounded-full"><XIcon size={20}/></button>
+                                    <button onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}} className="p-2 bg-slate-800 rounded-full active:scale-90 transition-all"><XIcon size={20}/></button>
                                 </div>
                                 <div className="space-y-6 mb-10">
                                     <div className="flex items-center gap-4">
-                                        <button onClick={() => setAmount(Math.max(0, amount - 50))} className="p-5 bg-slate-800 rounded-2xl active:scale-90 transition-all"><MinusIcon size={20}/></button>
+                                        <button onClick={() => setAmount(Math.max(0, (amount||0) - 50))} className="p-5 bg-slate-800 rounded-2xl active:scale-90 transition-all"><MinusIcon size={20}/></button>
                                         <div className="flex-1 relative">
                                             <input type="number" value={amount} onFocus={(e) => e.target.select()} onChange={e => setAmount(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-5 bg-slate-900 rounded-[1.5rem] text-3xl font-black text-center outline-none focus:ring-2 focus:ring-brand-500" />
                                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 font-black">{unit}</span>
                                         </div>
-                                        <button onClick={() => setAmount(amount + 50)} className="p-5 bg-brand-500 text-slate-950 rounded-2xl active:scale-90 transition-all"><PlusIcon size={20}/></button>
+                                        <button onClick={() => setAmount((amount||0) + 50)} className="p-5 bg-brand-500 text-slate-950 rounded-2xl active:scale-90 transition-all"><PlusIcon size={20}/></button>
                                     </div>
                                     <div className="flex gap-2 justify-center">
                                         <button onClick={() => setUnit('g')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='g'?'bg-white/10 text-brand-400':'text-slate-600'}`}>GRAMM</button>
                                         <button onClick={() => setUnit('ml')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='ml'?'bg-white/10 text-brand-400':'text-slate-600'}`}>ML</button>
                                     </div>
-                                    <div className="text-center bg-slate-900/50 p-4 rounded-2xl border border-white/5">
-                                        <div className="text-4xl font-black text-brand-400 tracking-tighter">{Math.round(selectedFood.calories * (amount/100))}</div>
+                                    <div className="text-center bg-slate-900/50 p-4 rounded-2xl border border-white/5 shadow-inner">
+                                        <div className="text-4xl font-black text-brand-400 tracking-tighter">{Math.round(selectedFood.calories * ((amount||0)/100))}</div>
                                         <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest mt-1">Kalorien für {amount || 0}{unit}</div>
                                     </div>
                                 </div>
-                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all">Bestätigen</button>
+                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all">
+                                    {editingInstanceId ? 'Aktualisieren' : 'Bestätigen'}
+                                </button>
                             </div>
                         </div>
                     )}
@@ -308,7 +350,7 @@
                                     <div className="space-y-4">
                                         <MacroBar label="Protein" value={totals.p} target={user.targetP} color="bg-fuchsia-500" />
                                         <MacroBar label="Kohlenhydrate" value={totals.c} target={user.targetC} color="bg-blue-500" />
-                                        <MacroBar label="Zucker" value={totals.s} target={user.targetS} color="bg-blue-300" indent={true} />
+                                        <MacroBar label="Zucker" value={totals.s} target={user.targetS} color="bg-blue-300" />
                                         <MacroBar label="Fett" value={totals.f} target={user.targetF} color="bg-amber-500" />
                                         <MacroBar label="Gesättigt" value={totals.sf} target={20} color="bg-amber-700" indent={true} />
                                     </div>
@@ -316,7 +358,7 @@
                             </div>
 
                             <button onClick={() => setView('addFood')} className="w-full bg-brand-600 text-white py-6 rounded-[2.5rem] font-black uppercase tracking-widest shadow-2xl shadow-brand-500/20 active:scale-95 transition-all flex items-center justify-center gap-4 mb-12">
-                                <PlusIcon size={28} strokeWidth={4} /> Essen hinzufügen
+                                <PlusIcon size={28} strokeWidth={4} /> Hinzufügen
                             </button>
 
                             <div className="space-y-4">
@@ -326,7 +368,7 @@
                                         <div className="py-16 text-center opacity-30 italic text-sm">Keine Einträge</div>
                                     ) : (
                                         [...dailyLog.items].reverse().map(item => (
-                                            <div key={item.instanceId} onClick={() => setShowDetails(item)} className="glass-card p-4 rounded-[1.8rem] flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer">
+                                            <div key={item.instanceId} onClick={() => handleDiaryClick(item)} className="glass-card p-4 rounded-[1.8rem] flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer border border-white/5 hover:border-brand-500/20">
                                                 <div className="flex items-center gap-4">
                                                     {item.image ? <img src={item.image} className="w-14 h-14 rounded-2xl object-cover border border-white/10" /> : <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600"><UtensilsIcon size={24}/></div>}
                                                     <div><div className="font-bold text-white tracking-tight">{item.name}</div><div className="text-[10px] font-black text-slate-500 uppercase mt-0.5">{item.amountDisplay} <span className="mx-1">•</span> {Math.round(item.calories)} kcal</div></div>
@@ -340,18 +382,18 @@
                         </div>
                     )}
 
-                    {/* ADD VIEW */}
+                    {/* VIEW: ADD FOOD */}
                     {view === 'addFood' && (
-                        <div className="animate-in slide-in-from-bottom duration-300">
+                        <div className="animate-in slide-in-from-bottom duration-300 p-2">
                             <div className="flex items-center gap-4 mb-10 mt-4">
                                 <button onClick={() => { setView('dashboard'); setApiResults([]); }} className="p-4 glass-card rounded-2xl"><ArrowLeftIcon size={24}/></button>
-                                <h2 className="text-3xl font-black tracking-tight">Hinzufügen</h2>
+                                <h2 className="text-3xl font-black tracking-tight">Tracken</h2>
                             </div>
 
                             <div className="space-y-5 mb-10">
                                 <div className="flex gap-2">
-                                    <input type="text" placeholder="Suchen..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="flex-[3] p-5 bg-slate-900 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 text-white font-bold" />
-                                    <button onClick={startBarcodeScan} className="flex-1 bg-brand-600 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg active:scale-95 transition-all">
+                                    <input type="text" placeholder="Essen suchen..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="flex-[3] p-5 bg-slate-900 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 text-white font-bold shadow-inner" />
+                                    <button onClick={startBarcodeScan} className="flex-1 bg-brand-600 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg active:scale-95 transition-all text-slate-950">
                                         <BarcodeIcon size={20}/><span className="text-[8px] font-black uppercase">Barcode</span>
                                     </button>
                                 </div>
@@ -359,7 +401,7 @@
                                     <button onClick={() => askGemini(searchQuery)} disabled={isThinking || searchQuery.length < 2} className="flex-1 bg-slate-900 border border-white/10 py-4 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2">
                                         {isThinking ? <Loader size={14}/> : <SparklesIcon size={14} className="text-brand-400"/>} AI Text
                                     </button>
-                                    <button onClick={() => aiFileRef.current.click()} disabled={isThinking} className="flex-1 bg-brand-500 text-slate-950 py-4 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 shadow-lg">
+                                    <button onClick={() => aiFileRef.current.click()} disabled={isThinking} className="flex-1 bg-brand-500 text-slate-950 py-4 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 shadow-lg active:scale-95">
                                         <CameraIcon size={16}/> AI Foto
                                     </button>
                                 </div>
@@ -371,7 +413,8 @@
                                 }} />
                             </div>
 
-                            {!searchQuery && apiResults.length === 0 && (
+                            {/* FAVS */}
+                            {!searchQuery && (
                                 <div className="space-y-4">
                                     <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-2">Häufig gegessen</h3>
                                     <div className="space-y-3">
@@ -381,7 +424,7 @@
                                                     <div className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center text-brand-400"><UtensilsIcon size={18}/></div>
                                                     <div><div className="font-bold text-sm text-white">{item.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{Math.round(item.calories)} kcal / 100g</div></div>
                                                 </div>
-                                                <div className="p-2 bg-brand-500/10 text-brand-400 rounded-lg"><PlusIcon size={16}/></div>
+                                                <PlusIcon size={16} className="text-brand-400"/>
                                             </div>
                                         ))}
                                     </div>
@@ -390,16 +433,16 @@
                         </div>
                     )}
 
-                    {/* AI PHOTO MODAL */}
+                    {/* MODAL: AI PHOTO DESCRIPTION */}
                     {showAiModal && (
                         <div className="fixed inset-0 bg-slate-950/95 z-[250] flex items-center justify-center p-6 backdrop-blur-xl">
                             <div className="w-full glass-card rounded-[2.5rem] p-8 space-y-6 animate-in zoom-in duration-200">
                                 <h3 className="text-xl font-black flex items-center gap-3"><CameraIcon className="text-brand-400"/> Foto-Details</h3>
-                                <img src={aiImage} className="w-full h-44 object-cover rounded-3xl border border-white/10" />
-                                <textarea placeholder="Was genau hast du gegessen?..." value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none text-sm h-28 font-medium text-white shadow-inner" />
+                                <img src={aiImage} className="w-full h-44 object-cover rounded-3xl border border-white/10 shadow-2xl" />
+                                <textarea placeholder="Was genau ist zu sehen? (z.B. große Portion, extra Beilage...)" value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none text-sm h-28 font-medium text-white shadow-inner" />
                                 <div className="flex gap-3">
                                     <button onClick={() => {setShowAiModal(false); setAiImage(null);}} className="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">Abbruch</button>
-                                    <button onClick={() => askGemini(aiDesc, aiImage)} disabled={isThinking} className="flex-1 py-4 bg-brand-500 text-slate-950 rounded-2xl font-black flex items-center justify-center gap-2 active:scale-95 transition-all">
+                                    <button onClick={() => askGemini(aiDesc, aiImage)} disabled={isThinking} className="flex-1 py-4 bg-brand-500 text-slate-950 rounded-2xl font-black flex items-center justify-center gap-2 active:scale-95">
                                         {isThinking ? <Loader size={18}/> : "Absenden"}
                                     </button>
                                 </div>
@@ -407,7 +450,7 @@
                         </div>
                     )}
 
-                    {/* PROFILE VIEW */}
+                    {/* VIEW: PROFILE */}
                     {view === 'profile' && (
                         <div className="animate-in slide-in-from-right duration-300">
                             <div className="flex items-center gap-4 mb-10 mt-4">
@@ -424,20 +467,20 @@
                                 </div>
                                 <div className="pt-8 border-t border-white/5">
                                     <label className="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest block mb-2 px-1">Gemini API Key</label>
-                                    <input type="password" value={user.geminiApiKey} onChange={e => setUser({...user, geminiApiKey: e.target.value})} className="w-full p-4 bg-slate-800 rounded-2xl font-mono text-xs border border-white/5 text-white" />
+                                    <input type="password" value={user.geminiApiKey} onChange={e => setUser({...user, geminiApiKey: e.target.value})} className="w-full p-4 bg-slate-800 rounded-2xl font-mono text-xs border border-white/5 text-white shadow-inner" />
                                 </div>
                                 <button onClick={() => { if(confirm("App zurücksetzen?")) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-rose-500/5 border border-rose-500/20 text-rose-500 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest mt-4">Reset</button>
                             </div>
                         </div>
                     )}
 
-                    {/* BARCODE MODAL */}
+                    {/* SCANNER MODAL */}
                     {isScanning && (
-                        <div className="fixed inset-0 bg-slate-950 z-[300] flex flex-col items-center justify-center p-6 backdrop-blur-3xl">
-                            <div className="w-full max-w-md glass-card rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl animate-in zoom-in duration-300">
+                        <div className="fixed inset-0 bg-slate-950 z-[300] flex flex-col items-center justify-center p-6 backdrop-blur-3xl animate-in zoom-in duration-300">
+                            <div className="w-full max-w-md glass-card rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl">
                                 <div className="flex justify-between items-center p-8 bg-slate-900/50">
                                     <h3 className="font-black text-xl text-white flex items-center gap-3"><BarcodeIcon size={24} className="text-brand-400"/> Scan</h3>
-                                    <button onClick={stopBarcodeScan} className="p-2 bg-slate-800 rounded-full"><XIcon size={20}/></button>
+                                    <button onClick={stopBarcodeScan} className="p-2 bg-slate-800 rounded-full active:scale-90 transition-all"><XIcon size={20}/></button>
                                 </div>
                                 <div className="p-6">
                                     <div id="qr-reader" className="w-full aspect-square rounded-3xl overflow-hidden border-4 border-slate-900 shadow-inner"></div>
