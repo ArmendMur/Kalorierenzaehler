@@ -154,6 +154,7 @@
             
             const [searchQuery, setSearchQuery] = useState('');
             const [apiResults, setApiResults] = useState([]);
+            const [isSearching, setIsSearching] = useState(false);
             const [isThinking, setIsThinking] = useState(false);
             const [isScanning, setIsScanning] = useState(false);
             const [selectedFood, setSelectedFood] = useState(null);
@@ -174,9 +175,11 @@
             useEffect(() => {
                 if (searchQuery.length < 2) {
                     setApiResults([]);
+                    setIsSearching(false);
                     return;
                 }
                 const controller = new AbortController();
+                setIsSearching(true);
                 const timeout = setTimeout(async () => {
                     try {
                         const res = await fetch(`https://de.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchQuery)}&search_simple=1&action=process&json=1&page_size=20`, { signal: controller.signal });
@@ -185,6 +188,7 @@
                             const formatted = data.products
                                 .filter(p => p.product_name)
                                 .map(p => ({
+                                    id: p._id || p.code || Math.random(),
                                     name: p.product_name,
                                     calories: Math.round(p.nutriments['energy-kcal_100g'] || 0),
                                     protein: p.nutriments.proteins_100g || 0,
@@ -200,6 +204,8 @@
                         }
                     } catch (e) { 
                         if (e.name !== 'AbortError') console.error("Suche fehlgeschlagen", e); 
+                    } finally {
+                        setIsSearching(false);
                     }
                 }, 200);
                 return () => {
@@ -583,8 +589,9 @@
 
                             {/* SEARCH RESULTS */}
                             <div className="space-y-3 mt-4">
+                                {isSearching && <div className="text-center py-4 animate-pulse text-brand-400 font-black text-xs uppercase tracking-widest">Suche läuft...</div>}
                                 {apiResults.map(f => (
-                                    <div key={f.id || 'res'} onClick={() => setSelectedFood(f)} className="glass-card p-4 rounded-[2rem] flex justify-between items-center animate-in zoom-in cursor-pointer active:scale-98">
+                                    <div key={f.id} onClick={() => setSelectedFood(f)} className="glass-card p-4 rounded-[2rem] flex justify-between items-center animate-in zoom-in cursor-pointer active:scale-98">
                                         <div className="flex items-center gap-4">
                                             {f.image ? <img src={f.image} className="w-12 h-12 rounded-xl object-cover" /> : <UtensilsIcon size={20} className="text-slate-600" />}
                                             <div><div className="font-bold text-white">{f.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{f.calories} kcal / 100g</div></div>
