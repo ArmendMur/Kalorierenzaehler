@@ -71,6 +71,7 @@
         const CameraIcon = (p) => <Icon d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" {...p} />;
         const SparklesIcon = (p) => <Icon d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" {...p} />;
         const BarcodeIcon = (p) => <Icon d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" {...p} />;
+        const SearchIcon = (p) => <Icon d="m21 21-4.3-4.3M19 11a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" {...p} />;
         const TrashIcon = (p) => <Icon d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" {...p} />;
         const ArrowLeftIcon = (p) => <Icon d="m12 19-7-7 7-7M19 12H5" {...p} />;
         const CheckIcon = (p) => <Icon d="m20 6-11 11-5-5" {...p} />;
@@ -172,57 +173,51 @@
             const qrInstance = useRef(null);
 
             // REAL-TIME SEARCH LOGIC
+            const triggerSearch = async (signal) => {
+                if (searchQuery.length < 2) return;
+                setIsSearching(true);
+                try {
+                    // Nutze die World-API mit Sprach-Fokus auf Deutsch
+                    const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchQuery)}&search_simple=1&action=process&json=1&page_size=40&lc=de`, { signal });
+                    const data = await res.json();
+                    
+                    if (data && data.products) {
+                        const formatted = data.products
+                            .map(p => {
+                                const n = p.nutriments || {};
+                                return {
+                                    id: p._id || p.code || Math.random(),
+                                    name: p.product_name_de || p.product_name || p.generic_name_de || p.brands || "Unbekanntes Produkt",
+                                    calories: Math.round(n['energy-kcal_100g'] || n['energy-kcal'] || 0),
+                                    protein: n.proteins_100g || n.proteins || 0,
+                                    carbs: n.carbohydrates_100g || n.carbohydrates || 0,
+                                    sugar: n.sugars_100g || n.sugars || 0,
+                                    fat: n.fat_100g || n.fat || 0,
+                                    saturatedFat: n['saturated-fat_100g'] || n['saturated-fat'] || 0,
+                                    unsaturatedFat: (n.fat_100g || 0) - (n['saturated-fat_100g'] || 0),
+                                    unit: '100g',
+                                    image: p.image_front_small_url || p.image_small_url
+                                };
+                            })
+                            .filter(p => p.name !== "Unbekanntes Produkt");
+                        setApiResults(formatted);
+                    }
+                } catch (e) { 
+                    if (e.name !== 'AbortError') console.error("Suche fehlgeschlagen", e); 
+                } finally {
+                    setIsSearching(false);
+                }
+            };
+
             useEffect(() => {
-                let isCurrent = true;
                 if (searchQuery.length < 2) {
                     setApiResults([]);
                     setIsSearching(false);
                     return;
                 }
                 const controller = new AbortController();
-                setIsSearching(true);
-                const timeout = setTimeout(async () => {
-                    try {
-                        // Nutze die Standard-Suche mit besseren Parametern
-                        const res = await fetch(`https://de.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchQuery)}&search_simple=1&action=process&json=1&page_size=30`, { signal: controller.signal });
-                        const data = await res.json();
-                        
-                        if (!isCurrent) return;
-
-                        if (data && data.products && data.products.length > 0) {
-                            const formatted = data.products
-                                .map(p => {
-                                    // Extrahiere Nährwerte sicher
-                                    const n = p.nutriments || {};
-                                    return {
-                                        id: p._id || p.code || Math.random(),
-                                        name: p.product_name_de || p.product_name || p.generic_name_de || p.brands || "Unbekanntes Produkt",
-                                        calories: Math.round(n['energy-kcal_100g'] || n['energy-kcal'] || 0),
-                                        protein: n.proteins_100g || n.proteins || 0,
-                                        carbs: n.carbohydrates_100g || n.carbohydrates || 0,
-                                        sugar: n.sugars_100g || n.sugars || 0,
-                                        fat: n.fat_100g || n.fat || 0,
-                                        saturatedFat: n['saturated-fat_100g'] || n['saturated-fat'] || 0,
-                                        unsaturatedFat: (n.fat_100g || 0) - (n['saturated-fat_100g'] || 0),
-                                        unit: '100g',
-                                        image: p.image_front_small_url || p.image_small_url
-                                    };
-                                })
-                                // Nur Produkte mit Namen anzeigen
-                                .filter(p => p.name !== "Unbekanntes Produkt");
-                            
-                            setApiResults(formatted);
-                        } else {
-                            setApiResults([]);
-                        }
-                    } catch (e) { 
-                        if (e.name !== 'AbortError' && isCurrent) console.error("Suche fehlgeschlagen", e); 
-                    } finally {
-                        if (isCurrent) setIsSearching(false);
-                    }
-                }, 250);
+                const timeout = setTimeout(() => triggerSearch(controller.signal), 400); 
                 return () => {
-                    isCurrent = false;
                     clearTimeout(timeout);
                     controller.abort();
                 };
@@ -561,9 +556,24 @@
                             </div>
 
                             <div className="space-y-5 mb-10">
-                                <div className="flex gap-2">
-                                    <input type="text" placeholder="Essen suchen..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="flex-[3] p-5 bg-slate-900 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 text-white font-bold shadow-inner" />
-                                    <button onClick={startBarcodeScan} className="flex-1 bg-brand-600 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg active:scale-95 transition-all text-slate-950">
+                                <div className="flex gap-2 relative">
+                                    <div className="flex-1 relative">
+                                        <input 
+                                            type="text" 
+                                            placeholder="Essen suchen..." 
+                                            value={searchQuery} 
+                                            onChange={e => setSearchQuery(e.target.value)}
+                                            onKeyDown={e => e.key === 'Enter' && triggerSearch()}
+                                            className="w-full p-5 pr-14 bg-slate-900 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 text-white font-bold shadow-inner" 
+                                        />
+                                        <button 
+                                            onClick={() => triggerSearch()}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-3 text-slate-500 hover:text-brand-400 active:scale-90 transition-all"
+                                        >
+                                            <SearchIcon size={20}/>
+                                        </button>
+                                    </div>
+                                    <button onClick={startBarcodeScan} className="w-20 bg-brand-600 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg active:scale-95 transition-all text-slate-950">
                                         <BarcodeIcon size={20}/><span className="text-[8px] font-black uppercase">Barcode</span>
                                     </button>
                                 </div>
