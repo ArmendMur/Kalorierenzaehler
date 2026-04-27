@@ -337,9 +337,12 @@
                     {/* MODAL: DETAILS */}
                     {showDetails && (
                         <div className="fixed inset-0 bg-slate-950/95 z-[200] flex items-center justify-center p-6 backdrop-blur-xl animate-in zoom-in duration-200">
-                            <div className="w-full glass-card rounded-[3rem] p-8 space-y-6">
+                            <div className="w-full glass-card rounded-[3rem] p-8 space-y-6 overscroll-contain">
                                 <div className="flex justify-between items-start">
-                                    <h3 className="text-2xl font-black">{showDetails.name}</h3>
+                                    <div>
+                                        <h3 className="text-2xl font-black">{showDetails.name}</h3>
+                                        <div className="text-[10px] font-black text-brand-400 uppercase tracking-widest mt-1">Portion: {showDetails.amountDisplay}</div>
+                                    </div>
                                     <button onClick={() => setShowDetails(null)} className="p-2 bg-slate-800 rounded-full"><XIcon size={20}/></button>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4 text-center">
@@ -534,13 +537,13 @@
                     {/* MODAL: AI PHOTO DESCRIPTION */}
                     {showAiModal && (
                         <div className="fixed inset-0 bg-slate-950/95 z-[250] flex items-center justify-center p-6 backdrop-blur-xl">
-                            <div className="w-full glass-card rounded-[2.5rem] p-8 space-y-6 animate-in zoom-in duration-200">
+                            <div className="w-full glass-card rounded-[2.5rem] p-8 space-y-6 animate-in zoom-in duration-200 overscroll-contain pointer-events-auto">
                                 <h3 className="text-xl font-black flex items-center gap-3"><CameraIcon className="text-brand-400"/> Foto-Info</h3>
                                 <img src={aiImage} className="w-full h-44 object-cover rounded-3xl border border-white/10 shadow-2xl" />
                                 <textarea placeholder="Was genau ist zu sehen?..." value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none text-sm h-28 font-medium text-white shadow-inner" />
                                 <div className="flex gap-3">
                                     <button onClick={() => {setShowAiModal(false); setAiImage(null);}} className="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">Abbruch</button>
-                                    <button onClick={() => askGemini(aiDesc, aiImage)} disabled={isThinking} className="flex-1 py-4 bg-brand-500 text-slate-950 rounded-2xl font-black flex items-center justify-center gap-2 active:scale-95 transition-all">
+                                    <button onClick={() => askGemini(aiDesc, aiImage)} disabled={isThinking} className="flex-1 py-4 bg-brand-500 text-slate-950 rounded-2xl font-black flex items-center justify-center gap-2 active:scale-95 transition-all touch-manipulation">
                                         {isThinking ? <LoaderIcon size={18}/> : "Absenden"}
                                     </button>
                                 </div>
