@@ -175,14 +175,26 @@
             const searchTimeout = useRef(null);
 
             // REAL-TIME SEARCH LOGIC
-            const triggerSearch = async (signal) => {
+            const triggerSearch = async (signal, retryCount = 0) => {
                 if (searchQuery.length < 2) return;
-                if (searchTimeout.current) clearTimeout(searchTimeout.current);
+                if (searchTimeout.current && retryCount === 0) clearTimeout(searchTimeout.current);
+                
                 setIsSearching(true);
                 try {
                     const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchQuery)}&search_simple=1&action=process&json=1&page_size=40&lc=de`, { signal });
+                    
+                    if (!res.ok && retryCount < 3) {
+                        throw new Error("Server Busy");
+                    }
+
                     const data = await res.json();
                     
+                    // Falls die Datenbank leer antwortet (häufig bei Überlastung), versuchen wir es automatisch noch einmal
+                    if ((!data || !data.products || data.products.length === 0) && retryCount < 2) {
+                        setTimeout(() => triggerSearch(signal, retryCount + 1), 500);
+                        return;
+                    }
+
                     if (data && data.products) {
                         const formatted = data.products
                             .map(p => {
@@ -205,9 +217,17 @@
                         setApiResults(formatted);
                     }
                 } catch (e) { 
-                    if (e.name !== 'AbortError') console.error("Suche fehlgeschlagen", e); 
+                    if (e.name !== 'AbortError') {
+                        if (retryCount < 3) {
+                            setTimeout(() => triggerSearch(signal, retryCount + 1), 500);
+                        } else {
+                            console.error("Suche endgültig fehlgeschlagen", e);
+                        }
+                    }
                 } finally {
-                    setIsSearching(false);
+                    if (retryCount >= 2 || (apiResults.length > 0)) {
+                        setIsSearching(false);
+                    }
                 }
             };
 
