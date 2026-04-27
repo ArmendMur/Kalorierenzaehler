@@ -172,12 +172,14 @@
             const aiFileRef = useRef();
             const qrInstance = useRef(null);
 
+            const searchTimeout = useRef(null);
+
             // REAL-TIME SEARCH LOGIC
             const triggerSearch = async (signal) => {
                 if (searchQuery.length < 2) return;
+                if (searchTimeout.current) clearTimeout(searchTimeout.current);
                 setIsSearching(true);
                 try {
-                    // Nutze die World-API mit Sprach-Fokus auf Deutsch
                     const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchQuery)}&search_simple=1&action=process&json=1&page_size=40&lc=de`, { signal });
                     const data = await res.json();
                     
@@ -216,9 +218,9 @@
                     return;
                 }
                 const controller = new AbortController();
-                const timeout = setTimeout(() => triggerSearch(controller.signal), 400); 
+                searchTimeout.current = setTimeout(() => triggerSearch(controller.signal), 800); 
                 return () => {
-                    clearTimeout(timeout);
+                    if (searchTimeout.current) clearTimeout(searchTimeout.current);
                     controller.abort();
                 };
             }, [searchQuery]);
