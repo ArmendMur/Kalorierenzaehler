@@ -246,7 +246,7 @@
                 if (!user.geminiApiKey) return alert("Hinterlege deinen Key im Profil!");
                 setIsThinking(true);
                 try {
-                    let prompt = `Analysiere das Gericht "${text || 'auf dem Bild'}". Schätze die Nährwerte PRO 100g oder 100ml. Gib NUR valides JSON zurück: {"name":"Name","calories":0,"protein":0,"carbs":0,"sugar":0,"fat":0,"saturatedFat":0,"unit":"100g"}`;
+                    let prompt = `Analysiere das Gericht "${text || 'auf dem Bild'}". Schätze die Nährwerte PRO 100g oder 100ml. Schätze AUCH das Gewicht der GESAMTEN Portion in Gramm oder ml. Gib NUR valides JSON zurück: {"name":"Name","calories":0,"protein":0,"carbs":0,"sugar":0,"fat":0,"saturatedFat":0,"unit":"100g","estimatedPortionWeight":350}`;
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
 
@@ -259,7 +259,9 @@
                     if(data.error) throw new Error(data.error.message);
                     const jsonStr = data.candidates[0].content.parts[0].text.match(/\{[\s\S]*\}/s)[0];
                     const json = JSON.parse(jsonStr);
+                    
                     setSelectedFood({ ...json, id: Date.now(), isAi: true, image: img });
+                    if (json.estimatedPortionWeight) setAmount(json.estimatedPortionWeight);
                     setShowAiModal(false); setAiImage(null); setAiDesc('');
                 } catch (e) { alert("KI Fehler: " + e.message); }
                 finally { setIsThinking(false); }
@@ -348,15 +350,17 @@
                         </div>
                     )}
 
-                    {/* MODAL: QUANTITY & STEPPER */}
+                    {/* MODAL: QUANTITY & STEPPER & LIVE NUTRITION */}
                     {selectedFood && (
                         <div className="fixed inset-0 bg-slate-950/90 z-[150] flex items-end backdrop-blur-sm p-4 animate-in slide-in-from-bottom duration-300">
-                            <div className="w-full glass-card rounded-[3rem] p-8 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
-                                <div className="flex justify-between items-center mb-8">
-                                    <h3 className="text-2xl font-black">{selectedFood.name}</h3>
+                            <div className="w-full glass-card rounded-[3rem] p-8 shadow-[0_-20px_50px_rgba(0,0,0,0.5)] border-t border-white/10">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-2xl font-black text-white">{selectedFood.name}</h3>
                                     <button onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}} className="p-2 bg-slate-800 rounded-full active:opacity-80 transition-all"><XIcon size={20}/></button>
                                 </div>
-                                <div className="space-y-6 mb-10">
+                                
+                                <div className="space-y-6 mb-8">
+                                    {/* MENGENAUSWAHL */}
                                     <div className="flex items-center gap-4">
                                         <button onClick={() => setAmount(Math.max(0, (amount||0) - 50))} className="p-5 bg-slate-800 rounded-2xl active:opacity-80 transition-all"><MinusIcon size={20}/></button>
                                         <div className="flex-1 relative">
@@ -366,16 +370,33 @@
                                         <button onClick={() => setAmount((amount||0) + 50)} className="p-5 bg-brand-500 text-slate-950 rounded-2xl active:opacity-80 transition-all"><PlusIcon size={20}/></button>
                                     </div>
                                     <div className="flex gap-2 justify-center">
-                                        <button onClick={() => setUnit('g')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='g'?'bg-white/10 text-brand-400':'text-slate-600'}`}>GRAMM</button>
-                                        <button onClick={() => setUnit('ml')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='ml'?'bg-white/10 text-brand-400':'text-slate-600'}`}>ML</button>
+                                        <button onClick={() => setUnit('g')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='g'?'bg-white/10 text-brand-400 border border-brand-500/20':'text-slate-600'}`}>GRAMM</button>
+                                        <button onClick={() => setUnit('ml')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='ml'?'bg-white/10 text-brand-400 border border-brand-500/20':'text-slate-600'}`}>ML</button>
                                     </div>
-                                    <div className="text-center bg-slate-900/50 p-4 rounded-2xl border border-white/5 shadow-inner">
-                                        <div className="text-4xl font-black text-brand-400 tracking-tighter">{Math.round(selectedFood.calories * ((amount||0)/100))}</div>
-                                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest mt-1">Kalorien für {amount || 0}{unit}</div>
+
+                                    {/* LIVE NÄHRWERTE */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center">
+                                            <div className="text-[8px] font-black text-slate-500 uppercase">Energie</div>
+                                            <div className="text-lg font-black text-brand-400">{Math.round(selectedFood.calories * ((amount||0)/100))} <span className="text-[8px]">kcal</span></div>
+                                        </div>
+                                        <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center">
+                                            <div className="text-[8px] font-black text-slate-500 uppercase">Protein</div>
+                                            <div className="text-lg font-black text-fuchsia-400">{Math.round(selectedFood.protein * ((amount||0)/100))}g</div>
+                                        </div>
+                                        <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center">
+                                            <div className="text-[8px] font-black text-slate-500 uppercase">Kohlenhydrate</div>
+                                            <div className="text-lg font-black text-blue-400">{Math.round(selectedFood.carbs * ((amount||0)/100))}g</div>
+                                        </div>
+                                        <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center">
+                                            <div className="text-[8px] font-black text-slate-500 uppercase">Fett</div>
+                                            <div className="text-lg font-black text-amber-400">{Math.round(selectedFood.fat * ((amount||0)/100))}g</div>
+                                        </div>
                                     </div>
                                 </div>
-                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black shadow-xl active:opacity-80 transition-opacity">
-                                    {editingInstanceId ? 'Aktualisieren' : 'Hinzufügen'}
+                                
+                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl active:opacity-80 transition-opacity">
+                                    {editingInstanceId ? 'Aktualisieren' : 'Bestätigen'}
                                 </button>
                             </div>
                         </div>
@@ -538,7 +559,7 @@
                         </div>
                     )}
 
-                    {/* SCANNER MODAL */}
+                    {/* BARCODE SCANNER MODAL */}
                     {isScanning && (
                         <div className="fixed inset-0 bg-slate-950 z-[300] flex flex-col items-center justify-center p-6 backdrop-blur-3xl animate-in zoom-in duration-300">
                             <div className="w-full max-w-md glass-card rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl">
