@@ -187,15 +187,15 @@
 
             const handleSafeAction = (fn) => (e) => {
                 if (e) {
-                    e.preventDefault();
+                    // Important: Don't preventDefault here as it might block the blur
                     e.stopPropagation();
                 }
-                // Dismiss keyboard immediately to stabilize layout
+                // Force blur to fix layout before action
                 if (document.activeElement && document.activeElement.tagName !== 'BODY') {
                     document.activeElement.blur();
                 }
-                // Small delay to allow layout to settle after keyboard dismiss
-                setTimeout(fn, 10);
+                // Execute immediately in next tick
+                setTimeout(fn, 0);
             };
 
             const totals = useMemo(() => dailyLog.items.reduce((acc, i) => ({
