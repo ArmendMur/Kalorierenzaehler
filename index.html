@@ -170,6 +170,38 @@
             const aiFileRef = useRef();
             const qrInstance = useRef(null);
 
+            // REAL-TIME SEARCH LOGIC
+            useEffect(() => {
+                if (searchQuery.length < 3) {
+                    setApiResults([]);
+                    return;
+                }
+                const timeout = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`https://de.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchQuery)}&search_simple=1&action=process&json=1&page_size=20`);
+                        const data = await res.json();
+                        if (data.products) {
+                            const formatted = data.products
+                                .filter(p => p.product_name)
+                                .map(p => ({
+                                    name: p.product_name,
+                                    calories: Math.round(p.nutriments['energy-kcal_100g'] || 0),
+                                    protein: p.nutriments.proteins_100g || 0,
+                                    carbs: p.nutriments.carbohydrates_100g || 0,
+                                    sugar: p.nutriments.sugars_100g || 0,
+                                    fat: p.nutriments.fat_100g || 0,
+                                    saturatedFat: p.nutriments['saturated-fat_100g'] || 0,
+                                    unsaturatedFat: (p.nutriments.fat_100g || 0) - (p.nutriments['saturated-fat_100g'] || 0),
+                                    unit: '100g',
+                                    image: p.image_front_small_url || p.image_small_url
+                                }));
+                            setApiResults(formatted);
+                        }
+                    } catch (e) { console.error("Suche fehlgeschlagen", e); }
+                }, 500);
+                return () => clearTimeout(timeout);
+            }, [searchQuery]);
+
             useEffect(() => { localStorage.setItem('kTrackUser', JSON.stringify(user)); }, [user]);
             useEffect(() => { localStorage.setItem('kTrackLog', JSON.stringify(dailyLog)); }, [dailyLog]);
             useEffect(() => { localStorage.setItem('kTrackHistory', JSON.stringify(itemHistory)); }, [itemHistory]);
