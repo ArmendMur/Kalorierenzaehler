@@ -174,6 +174,15 @@
             useEffect(() => { localStorage.setItem('kTrackLog', JSON.stringify(dailyLog)); }, [dailyLog]);
             useEffect(() => { localStorage.setItem('kTrackHistory', JSON.stringify(itemHistory)); }, [itemHistory]);
 
+            const handleSafeAction = (fn) => (e) => {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                if (document.activeElement) document.activeElement.blur();
+                fn();
+            };
+
             const totals = useMemo(() => dailyLog.items.reduce((acc, i) => ({
                 kcal: acc.kcal + (Number(i.calories) || 0),
                 p: acc.p + (Number(i.protein) || 0),
@@ -361,17 +370,17 @@
 
                     {/* MODAL: QUANTITY & STEPPER & LIVE NUTRITION */}
                     {selectedFood && (
-                        <div className="fixed inset-0 bg-slate-950/90 z-[450] flex items-end p-4 backdrop-blur-sm animate-in slide-up duration-300 pointer-events-none">
-                            <div className="w-full glass-card rounded-[3rem] p-8 shadow-[0_-20px_50px_rgba(0,0,0,0.5)] border-t border-white/10 overscroll-contain pointer-events-auto">
+                        <>
+                            <div className="fixed inset-0 bg-slate-950/90 z-[450] backdrop-blur-sm animate-in fade-in duration-300" onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}}></div>
+                            <div className="fixed bottom-4 left-4 right-4 z-[460] glass-card rounded-[3rem] p-8 shadow-2xl border border-white/10 animate-in slide-up duration-300 overscroll-contain max-h-[90vh] overflow-y-auto">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-2xl font-black text-white">{selectedFood.name}</h3>
-                                    <button type="button" onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}} className="p-2 bg-slate-800 rounded-full active:opacity-80 transition-all"><XIcon size={20}/></button>
+                                    <button type="button" onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}} className="p-2 bg-slate-800 rounded-full active:opacity-80"><XIcon size={20}/></button>
                                 </div>
                                 
                                 <div className="space-y-6 mb-8">
-                                    {/* MENGENAUSWAHL */}
                                     <div className="flex items-center gap-4">
-                                        <button type="button" onClick={() => setAmount(Math.max(0, (amount||0) - 50))} className="p-5 bg-slate-800 rounded-2xl active:opacity-80 transition-all touch-manipulation"><MinusIcon size={20}/></button>
+                                        <button type="button" onClick={() => setAmount(Math.max(0, (amount||0) - 50))} className="p-5 bg-slate-800 rounded-2xl active:opacity-80 touch-manipulation"><MinusIcon size={20}/></button>
                                         <div className="flex-1 relative">
                                             <input 
                                                 type="number" 
@@ -383,14 +392,13 @@
                                             />
                                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 font-black pointer-events-none">{unit}</span>
                                         </div>
-                                        <button type="button" onClick={() => setAmount((amount||0) + 50)} className="p-5 bg-brand-500 text-slate-950 rounded-2xl active:opacity-80 transition-all touch-manipulation"><PlusIcon size={20}/></button>
+                                        <button type="button" onClick={() => setAmount((amount||0) + 50)} className="p-5 bg-brand-500 text-slate-950 rounded-2xl active:opacity-80 touch-manipulation"><PlusIcon size={20}/></button>
                                     </div>
                                     <div className="flex gap-2 justify-center">
                                         <button type="button" onClick={() => setUnit('g')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='g'?'bg-white/10 text-brand-400 border border-brand-500/20':'text-slate-600'}`}>GRAMM</button>
                                         <button type="button" onClick={() => setUnit('ml')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='ml'?'bg-white/10 text-brand-400 border border-brand-500/20':'text-slate-600'}`}>ML</button>
                                     </div>
 
-                                    {/* LIVE NÄHRWERTE */}
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center">
                                             <div className="text-[8px] font-black text-slate-500 uppercase">Energie</div>
@@ -412,12 +420,12 @@
                                 </div>
                                 
                                 <button type="button" 
-                                    onPointerDown={() => addEntry(selectedFood)} 
-                                    className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl active:opacity-80 transition-opacity touch-manipulation">
+                                    onPointerDown={handleSafeAction(() => addEntry(selectedFood))}
+                                    className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all touch-manipulation">
                                     {editingInstanceId ? 'Aktualisieren' : 'Bestätigen'}
                                 </button>
                             </div>
-                        </div>
+                        </>
                     )}
 
                     {/* DASHBOARD */}
@@ -538,8 +546,9 @@
 
                     {/* MODAL: AI PHOTO DESCRIPTION */}
                     {showAiModal && (
-                        <div className="fixed inset-0 bg-slate-950/95 z-[400] flex items-end justify-center p-4 backdrop-blur-xl animate-in fade-in duration-300">
-                            <div className="w-full glass-card rounded-[3rem] p-8 space-y-6 animate-in slide-up duration-300 overscroll-contain max-h-[90vh] overflow-y-auto shadow-[0_-20px_50px_rgba(0,0,0,0.5)] relative">
+                        <>
+                            <div className="fixed inset-0 bg-slate-950/95 z-[400] backdrop-blur-xl animate-in fade-in duration-300" onClick={() => {setShowAiModal(false); setAiImage(null);}}></div>
+                            <div className="fixed bottom-4 left-4 right-4 z-[410] glass-card rounded-[3rem] p-8 space-y-6 animate-in slide-up duration-300 overscroll-contain max-h-[90vh] overflow-y-auto shadow-2xl border border-white/10">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-xl font-black flex items-center gap-3"><CameraIcon className="text-brand-400"/> Foto-Info</h3>
                                     <button type="button" onClick={() => {setShowAiModal(false); setAiImage(null);}} className="p-2 bg-slate-800 rounded-full active:opacity-80"><XIcon size={20}/></button>
@@ -548,15 +557,14 @@
                                 <textarea placeholder="Was genau ist zu sehen?..." value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none text-sm h-24 font-medium text-white shadow-inner" />
                                 <div className="flex flex-col gap-3">
                                     <button type="button" 
-                                        onMouseDown={() => !isThinking && askGemini(aiDesc, aiImage)}
-                                        onTouchStart={() => !isThinking && askGemini(aiDesc, aiImage)}
+                                        onPointerDown={handleSafeAction(() => !isThinking && askGemini(aiDesc, aiImage))}
                                         className="w-full py-6 bg-brand-500 text-slate-950 rounded-[2rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-all touch-manipulation shadow-xl">
                                         {isThinking ? <LoaderIcon size={20}/> : <><CheckIcon size={20}/> Absenden</>}
                                     </button>
-                                    <button type="button" onClick={() => {setShowAiModal(false); setAiImage(null);}} className="w-full py-4 text-slate-500 font-bold text-xs uppercase tracking-widest">Abbrechen</button>
+                                    <button type="button" onClick={() => {setShowAiModal(false); setAiImage(null);}} className="w-full py-2 text-slate-500 font-bold text-xs uppercase tracking-widest">Abbrechen</button>
                                 </div>
                             </div>
-                        </div>
+                        </>
                     )}
 
                     {/* VIEW: PROFILE */}
