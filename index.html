@@ -26,11 +26,17 @@
                     },
                     animation: {
                         'pop-in': 'pop-in 0.4s cubic-bezier(0.26, 0.53, 0.74, 1.48) forwards',
-                        'success-fade': 'success-fade 1.5s ease-out forwards'
+                        'success-fade': 'success-fade 1.5s ease-out forwards',
+                        'slide-up': 'slide-up 0.3s ease-out forwards',
+                        'fade-in': 'fade-in 0.2s ease-out forwards',
+                        'zoom-in': 'zoom-in 0.2s ease-out forwards'
                     },
                     keyframes: {
                         'pop-in': { '0%': { transform: 'scale(0.8)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
-                        'success-fade': { '0%': { opacity: '0', transform: 'translateY(10px)' }, '20%': { opacity: '1', transform: 'translateY(0)' }, '80%': { opacity: '1' }, '100%': { opacity: '0' } }
+                        'success-fade': { '0%': { opacity: '0', transform: 'translateY(10px)' }, '20%': { opacity: '1', transform: 'translateY(0)' }, '80%': { opacity: '1' }, '100%': { opacity: '0' } },
+                        'slide-up': { '0%': { transform: 'translateY(100%)' }, '100%': { transform: 'translateY(0)' } },
+                        'fade-in': { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        'zoom-in': { '0%': { transform: 'scale(0.95)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } }
                     }
                 }
             }
@@ -352,8 +358,8 @@
 
                     {/* MODAL: QUANTITY & STEPPER & LIVE NUTRITION */}
                     {selectedFood && (
-                        <div className="fixed inset-0 bg-slate-950/90 z-[150] flex items-end backdrop-blur-sm p-4 animate-in slide-in-from-bottom duration-300">
-                            <div className="w-full glass-card rounded-[3rem] p-8 shadow-[0_-20px_50px_rgba(0,0,0,0.5)] border-t border-white/10">
+                        <div className="fixed inset-0 bg-slate-950/90 z-[200] flex items-end backdrop-blur-sm p-4 animate-in slide-up duration-300">
+                            <div className="w-full glass-card rounded-[3rem] p-8 shadow-[0_-20px_50px_rgba(0,0,0,0.5)] border-t border-white/10 overscroll-contain pointer-events-auto">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-2xl font-black text-white">{selectedFood.name}</h3>
                                     <button onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}} className="p-2 bg-slate-800 rounded-full active:opacity-80 transition-all"><XIcon size={20}/></button>
@@ -362,12 +368,19 @@
                                 <div className="space-y-6 mb-8">
                                     {/* MENGENAUSWAHL */}
                                     <div className="flex items-center gap-4">
-                                        <button onClick={() => setAmount(Math.max(0, (amount||0) - 50))} className="p-5 bg-slate-800 rounded-2xl active:opacity-80 transition-all"><MinusIcon size={20}/></button>
+                                        <button onClick={() => setAmount(Math.max(0, (amount||0) - 50))} className="p-5 bg-slate-800 rounded-2xl active:opacity-80 transition-all touch-manipulation"><MinusIcon size={20}/></button>
                                         <div className="flex-1 relative">
-                                            <input type="number" value={amount} onFocus={(e) => e.target.select()} onChange={e => setAmount(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-5 bg-slate-900 rounded-[1.5rem] text-3xl font-black text-center outline-none focus:ring-2 focus:ring-brand-500 text-white" />
-                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 font-black">{unit}</span>
+                                            <input 
+                                                type="number" 
+                                                inputMode="decimal"
+                                                value={amount} 
+                                                onFocus={(e) => setTimeout(() => e.target.select(), 50)} 
+                                                onChange={e => setAmount(e.target.value === '' ? '' : Number(e.target.value))} 
+                                                className="w-full p-5 bg-slate-900 rounded-[1.5rem] text-3xl font-black text-center outline-none focus:ring-2 focus:ring-brand-500 text-white" 
+                                            />
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 font-black pointer-events-none">{unit}</span>
                                         </div>
-                                        <button onClick={() => setAmount((amount||0) + 50)} className="p-5 bg-brand-500 text-slate-950 rounded-2xl active:opacity-80 transition-all"><PlusIcon size={20}/></button>
+                                        <button onClick={() => setAmount((amount||0) + 50)} className="p-5 bg-brand-500 text-slate-950 rounded-2xl active:opacity-80 transition-all touch-manipulation"><PlusIcon size={20}/></button>
                                     </div>
                                     <div className="flex gap-2 justify-center">
                                         <button onClick={() => setUnit('g')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='g'?'bg-white/10 text-brand-400 border border-brand-500/20':'text-slate-600'}`}>GRAMM</button>
@@ -395,7 +408,7 @@
                                     </div>
                                 </div>
                                 
-                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl active:opacity-80 transition-opacity">
+                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl active:opacity-80 transition-opacity touch-manipulation">
                                     {editingInstanceId ? 'Aktualisieren' : 'Bestätigen'}
                                 </button>
                             </div>
