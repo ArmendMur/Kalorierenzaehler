@@ -27,11 +27,13 @@
     </script>
 
     <style>
-        body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; background-color: #070b14; color: #f8fafc; }
+        body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; background-color: #070b14; color: #f8fafc; font-family: 'Inter', sans-serif; }
         .glass-card { background: rgba(21, 30, 45, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .hidden-input { display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .spinner { animation: spin 1s linear infinite; }
+        #qr-reader { border: none !important; border-radius: 2rem; overflow: hidden; }
+        #qr-reader__scan_region video { object-fit: cover !important; border-radius: 2rem; }
     </style>
 </head>
 <body class="bg-slate-950">
@@ -42,42 +44,35 @@
         
         // --- ICONS ---
         const IconWrapper = ({ children, size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
         );
         const Plus = (p) => <IconWrapper {...p}><path d="M5 12h14"/><path d="M12 5v14"/></IconWrapper>;
         const Home = (p) => <IconWrapper {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></IconWrapper>;
         const UserIcon = (p) => <IconWrapper {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></IconWrapper>;
         const Utensils = (p) => <IconWrapper {...p}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></IconWrapper>;
         const X = (p) => <IconWrapper {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconWrapper>;
-        const Check = (p) => <IconWrapper {...p}><polyline points="20 6 9 17 4 12"/></IconWrapper>;
         const Camera = (p) => <IconWrapper {...p}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></IconWrapper>;
         const Sparkles = (p) => <IconWrapper {...p}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></IconWrapper>;
-        const ScanBarcode = (p) => <IconWrapper {...p}><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M17 7v10"/></IconWrapper>;
+        const ScanBarcode = (p) => <IconWrapper {...p}><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></IconWrapper>;
         const Trash2 = (p) => <IconWrapper {...p}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></IconWrapper>;
         const ArrowLeft = (p) => <IconWrapper {...p}><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></IconWrapper>;
-        const ChevronRight = (p) => <IconWrapper {...p}><path d="m9 18 6-6-6-6"/></IconWrapper>;
         const Loader = (p) => <IconWrapper {...p} className="spinner"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></IconWrapper>;
-        const CloudSearch = (p) => <IconWrapper {...p}><path d="M17.5 19c2.5 0 4.5-2 4.5-4.5c0-2-1.2-3.7-3-4.2c-.3-2.2-2.1-4-4.3-4c-1.7 0-3.2 1-4 2.5c-.5-.2-1-.3-1.5-.3C6 8.5 4 10.5 4 13.2c0 .4.1.8.2 1.1"/><circle cx="11" cy="19" r="3"/><path d="m21 21-4.3-4.3"/></IconWrapper>;
 
         // --- HELPERS ---
-        const calculateBMR = (g, w, h, a) => {
-            let bmr = (10 * w) + (6.25 * h) - (5 * a);
-            return g === 'male' ? bmr + 5 : bmr - 161;
-        };
-
-        const resizeImage = (file, maxWidth = 600) => {
+        const resizeImage = (file) => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const scale = maxWidth / img.width;
-                        canvas.width = maxWidth;
+                        const MAX_WIDTH = 800;
+                        const scale = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
                         canvas.height = img.height * scale;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                        resolve(canvas.toDataURL('image/jpeg', 0.6));
                     };
                     img.src = e.target.result;
                 };
@@ -96,12 +91,12 @@
 
             return (
                 <div className="relative flex items-center justify-center">
-                    <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
+                    <svg height={radius * 2} width={radius * 2} className="transform -rotate-90 filter drop-shadow-2xl">
                         <circle stroke="#1e293b" strokeWidth={stroke} fill="transparent" r={normRadius} cx={radius} cy={radius} />
-                        <circle stroke="#10b981" strokeWidth={stroke} strokeDasharray={circ + ' ' + circ} style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.5s' }} strokeLinecap="round" fill="transparent" r={normRadius} cx={radius} cy={radius} />
+                        <circle stroke="#10b981" strokeWidth={stroke} strokeDasharray={circ + ' ' + circ} style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s ease' }} strokeLinecap="round" fill="transparent" r={normRadius} cx={radius} cy={radius} />
                     </svg>
                     <div className="absolute text-center">
-                        <div className="text-3xl font-black text-white">{Math.round(target - consumed)}</div>
+                        <div className="text-3xl font-black text-white">{Math.max(0, Math.round(target - consumed))}</div>
                         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">übrig</div>
                     </div>
                 </div>
@@ -109,14 +104,14 @@
         };
 
         const MacroTile = ({ label, value, subLabel, subValue, color, subColor }) => (
-            <div className="bg-slate-900/50 p-3 rounded-2xl border border-white/5">
+            <div className="bg-slate-900/50 p-4 rounded-[1.5rem] border border-white/5">
                 <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-black text-slate-500 uppercase">{label}</span>
-                    <span className={`text-xs font-black ${color}`}>{Math.round(value)}g</span>
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">{label}</span>
+                    <span className={`text-sm font-black ${color}`}>{Math.round(value)}g</span>
                 </div>
                 {subLabel && (
-                    <div className="flex justify-between items-center border-t border-white/5 pt-1 mt-1">
-                        <span className="text-[8px] font-black text-slate-600 uppercase">{subLabel}</span>
+                    <div className="flex justify-between items-center border-t border-white/5 pt-2 mt-2">
+                        <span className="text-[8px] font-black text-slate-600 uppercase tracking-wider">{subLabel}</span>
                         <span className={`text-[10px] font-black ${subColor}`}>{Math.round(subValue)}g</span>
                     </div>
                 )}
@@ -132,57 +127,96 @@
                 const today = new Date().toISOString().split('T')[0];
                 return (saved && saved.date === today) ? saved : { date: today, items: [] };
             });
-            const [customItems, setCustomItems] = useState(() => JSON.parse(localStorage.getItem('kTrackCustom')) || []);
             
             const [searchQuery, setSearchQuery] = useState('');
             const [apiResults, setApiResults] = useState([]);
             const [isThinking, setIsThinking] = useState(false);
             const [isScanning, setIsScanning] = useState(false);
             const [selectedFood, setSelectedFood] = useState(null);
-            const [amount, setAmount] = useState(1);
             
-            const [onboarding, setOnboarding] = useState({ gender: 'female', age: 30, height: 170, weight: 70, goalWeight: 65, activity: 1.375, geminiApiKey: '' });
-            const [customForm, setCustomForm] = useState({ name: '', calories: '', protein: '', carbs: '', sugar: '', fat: '', saturatedFat: '', unsaturatedFat: '', image: null });
+            const [aiImage, setAiImage] = useState(null);
+            const [aiDesc, setAiDesc] = useState('');
+            const [showAiModal, setShowAiModal] = useState(false);
 
             const aiFileRef = useRef();
-            const customFileRef = useRef();
 
             useEffect(() => { if(user) { localStorage.setItem('kTrackUser', JSON.stringify(user)); setView('dashboard'); } }, [user]);
             useEffect(() => localStorage.setItem('kTrackLog', JSON.stringify(dailyLog)), [dailyLog]);
-            useEffect(() => localStorage.setItem('kTrackCustom', JSON.stringify(customItems)), [customItems]);
+
+            // Barcode Scanner Logic
+            useEffect(() => {
+                let scanner = null;
+                if (isScanning) {
+                    scanner = new Html5Qrcode("qr-reader");
+                    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+                        fetchBarcode(text);
+                        scanner.stop();
+                        setIsScanning(false);
+                    }).catch(() => alert("Kamerafehler. Bitte Berechtigung prüfen."));
+                }
+                return () => { if(scanner) scanner.stop().catch(() => {}); };
+            }, [isScanning]);
+
+            const fetchBarcode = async (code) => {
+                try {
+                    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+                    const data = await res.json();
+                    if(data.status === 1) {
+                        const p = data.product;
+                        const item = {
+                            name: p.product_name || "Unbekannt",
+                            calories: Math.round(p.nutriments['energy-kcal_100g'] || 0),
+                            protein: p.nutriments.proteins_100g || 0,
+                            carbs: p.nutriments.carbohydrates_100g || 0,
+                            sugar: p.nutriments.sugars_100g || 0,
+                            fat: p.nutriments.fat_100g || 0,
+                            saturatedFat: p.nutriments['saturated-fat_100g'] || 0,
+                            unsaturatedFat: (p.nutriments.fat_100g || 0) - (p.nutriments['saturated-fat_100g'] || 0),
+                            unit: '100g',
+                            image: p.image_front_small_url
+                        };
+                        setApiResults([item]);
+                        setView('addFood');
+                    } else { alert("Produkt nicht gefunden."); }
+                } catch (e) { alert("Barcode Fehler."); }
+            };
 
             const totals = useMemo(() => dailyLog.items.reduce((acc, i) => ({
                 kcal: acc.kcal + i.calories,
-                p: acc.protein + i.protein,
-                c: acc.carbs + i.carbs,
-                s: acc.sugar + i.sugar,
-                f: acc.fat + i.fat,
-                sf: acc.saturatedFat + i.saturatedFat,
-                uf: acc.unsaturatedFat + i.unsaturatedFat
-            }), { kcal: 0, protein: 0, carbs: 0, sugar: 0, fat: 0, saturatedFat: 0, unsaturatedFat: 0 }), [dailyLog]);
+                p: acc.p + i.protein,
+                c: acc.c + i.carbs,
+                s: acc.s + i.sugar,
+                f: acc.f + i.fat,
+                sf: acc.sf + i.saturatedFat,
+                uf: acc.uf + i.unsaturatedFat
+            }), { kcal: 0, p: 0, c: 0, s: 0, f: 0, sf: 0, uf: 0 }), [dailyLog]);
 
             const askGemini = async (text, img = null) => {
-                if (!user?.geminiApiKey) return alert("Key fehlt!");
+                if (!user?.geminiApiKey) return alert("Hinterlege deinen Key im Profil!");
                 setIsThinking(true);
                 try {
-                    let parts = [{ text: `Analysiere das Gericht "${text || 'auf dem Foto'}". Schätze Nährwerte für eine Portion. Gib NUR JSON: {"name":"..","calories":0,"protein":0,"carbs":0,"sugar":0,"fat":0,"saturatedFat":0,"unsaturatedFat":0,"unit":"Portion"}` }];
-                    if (img) parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
+                    let prompt = `Analysiere das Gericht "${text || 'auf dem Bild'}". Schätze die Nährwerte für EINE Portion. Gib NUR valides JSON zurück: {"name":"..","calories":0,"protein":0,"carbs":0,"sugar":0,"fat":0,"saturatedFat":0,"unsaturatedFat":0,"unit":"Portion"}`;
+                    let contents = [{ parts: [{ text: prompt }] }];
+                    if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
 
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${user.geminiApiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts }] })
+                        body: JSON.stringify({ contents })
                     });
                     const data = await res.json();
-                    const json = JSON.parse(data.candidates[0].content.parts[0].text.match(/\{.*\}/s)[0]);
+                    if(data.error) throw new Error(data.error.message);
+                    const json = JSON.parse(data.candidates[0].content.parts[0].text.match(/\{[\s\S]*\}/s)[0]);
                     setApiResults([{ ...json, id: Date.now(), isAi: true, image: img }]);
-                    if (text) setSearchQuery(text);
+                    setShowAiModal(false);
+                    setAiImage(null);
+                    setAiDesc('');
                 } catch (e) { alert("KI Fehler: " + e.message); }
                 finally { setIsThinking(false); }
             };
 
-            const addEntry = (food, mult) => {
-                const entry = { ...food, instanceId: Date.now(), calories: Math.round(food.calories * mult), protein: food.protein * mult, carbs: food.carbs * mult, sugar: food.sugar * mult, fat: food.fat * mult, saturatedFat: food.saturatedFat * mult, unsaturatedFat: food.unsaturatedFat * mult, amountDisplay: mult };
+            const addEntry = (food) => {
+                const entry = { ...food, instanceId: Date.now() };
                 setDailyLog(prev => ({ ...prev, items: [...prev.items, entry] }));
                 setView('dashboard');
                 setSearchQuery('');
@@ -191,117 +225,157 @@
             };
 
             return (
-                <div className="max-w-md mx-auto min-h-screen relative pb-24">
-                    {/* MODAL */}
+                <div className="max-w-md mx-auto min-h-screen relative pb-32">
+                    
+                    {/* AI PHOTO DESCRIPTION MODAL */}
+                    {showAiModal && (
+                        <div className="fixed inset-0 bg-slate-950/95 z-[110] flex items-center justify-center p-6 backdrop-blur-xl">
+                            <div className="w-full glass-card rounded-[2.5rem] p-8 space-y-6">
+                                <h3 className="text-xl font-black flex items-center gap-3"><Camera className="text-emerald-400"/> Foto-Info</h3>
+                                <img src={aiImage} className="w-full h-40 object-cover rounded-2xl border border-white/10" />
+                                <textarea placeholder="Optional: Was ist genau zu sehen? (z.B. Extra Soße, 200g Reis...)" value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-4 bg-slate-800 rounded-2xl border border-white/5 focus:ring-2 focus:ring-emerald-500 outline-none text-sm h-24" />
+                                <div className="flex gap-3">
+                                    <button onClick={() => setShowAiModal(false)} className="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">Abbruch</button>
+                                    <button onClick={() => askGemini(aiDesc, aiImage)} disabled={isThinking} className="flex-1 py-4 bg-emerald-500 text-slate-950 rounded-2xl font-black flex items-center justify-center gap-2">
+                                        {isThinking ? <Loader size={18}/> : "Analysieren"}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MENGEN MODAL */}
                     {selectedFood && (
-                        <div className="fixed inset-0 bg-slate-950/90 z-50 flex items-end backdrop-blur-sm p-4">
-                            <div className="w-full glass-card rounded-[2.5rem] p-8 animate-in slide-in-from-bottom">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-xl font-black">{selectedFood.name}</h3>
-                                    <button onClick={() => setSelectedFood(null)}><X /></button>
+                        <div className="fixed inset-0 bg-slate-950/90 z-[100] flex items-end backdrop-blur-sm p-4">
+                            <div className="w-full glass-card rounded-[3rem] p-8 animate-in slide-in-from-bottom shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+                                <div className="flex justify-between items-center mb-8">
+                                    <h3 className="text-2xl font-black">{selectedFood.name}</h3>
+                                    <button onClick={() => setSelectedFood(null)} className="p-2 bg-slate-800 rounded-full"><X size={20}/></button>
                                 </div>
-                                <div className="mb-8">
-                                    <label className="text-[10px] font-black uppercase text-slate-500 block mb-2 text-center">Menge (Portionen)</label>
-                                    <select value={amount} onChange={e => setAmount(Number(e.target.value))} className="w-full p-4 bg-slate-800 rounded-2xl text-center text-xl font-bold appearance-none">
-                                        {[0.5, 1, 1.5, 2, 3].map(v => <option key={v} value={v}>{v}x {selectedFood.unit}</option>)}
-                                    </select>
+                                <div className="grid grid-cols-2 gap-4 mb-8">
+                                    <div className="p-4 bg-slate-900/50 rounded-2xl border border-white/5 text-center">
+                                        <div className="text-[10px] font-black text-slate-500 uppercase">Kalorien</div>
+                                        <div className="text-xl font-black text-white">{selectedFood.calories} kcal</div>
+                                    </div>
+                                    <div className="p-4 bg-slate-900/50 rounded-2xl border border-white/5 text-center">
+                                        <div className="text-[10px] font-black text-slate-500 uppercase">Portion</div>
+                                        <div className="text-xl font-black text-white">{selectedFood.unit}</div>
+                                    </div>
                                 </div>
-                                <button onClick={() => addEntry(selectedFood, amount)} className="w-full bg-emerald-500 text-slate-950 py-5 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20">Hinzufügen</button>
+                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-emerald-500 text-slate-950 py-5 rounded-[1.5rem] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">Bestätigen</button>
                             </div>
                         </div>
                     )}
 
                     {/* VIEWS */}
                     {view === 'onboarding' && (
-                        <div className="p-8 pt-20">
-                            <h1 className="text-4xl font-black mb-2">KaloTrack</h1>
-                            <p className="text-slate-500 font-bold mb-10 uppercase text-xs tracking-widest">Setup in 30 Sekunden</p>
-                            <div className="space-y-6">
-                                <input type="number" placeholder="Gewicht (kg)" onChange={e => setOnboarding({...onboarding, weight: Number(e.target.value)})} className="w-full p-4 bg-slate-900 border border-white/5 rounded-2xl" />
-                                <input type="number" placeholder="Größe (cm)" onChange={e => setOnboarding({...onboarding, height: Number(e.target.value)})} className="w-full p-4 bg-slate-900 border border-white/5 rounded-2xl" />
-                                <input type="number" placeholder="Alter" onChange={e => setOnboarding({...onboarding, age: Number(e.target.value)})} className="w-full p-4 bg-slate-900 border border-white/5 rounded-2xl" />
-                                <input type="password" placeholder="Gemini API Key" onChange={e => setOnboarding({...onboarding, geminiApiKey: e.target.value})} className="w-full p-4 bg-slate-900 border border-fuchsia-500/20 rounded-2xl text-xs font-mono" />
+                        <div className="p-10 pt-24 text-center">
+                            <div className="inline-block p-6 bg-emerald-500/10 rounded-[2.5rem] mb-8 border border-emerald-500/20"><Utensils size={48} className="text-emerald-400"/></div>
+                            <h1 className="text-4xl font-black mb-4 tracking-tighter text-white">KaloTrack</h1>
+                            <p className="text-slate-500 font-bold mb-12 uppercase text-[10px] tracking-[0.2em]">Dein smarter Begleiter 2026</p>
+                            <div className="space-y-4 max-w-xs mx-auto">
+                                <input type="number" placeholder="Gewicht (kg)" onChange={e => setOnboarding({...onboarding, weight: Number(e.target.value)})} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500" />
+                                <input type="password" placeholder="Gemini API Key" onChange={e => setOnboarding({...onboarding, geminiApiKey: e.target.value})} className="w-full p-5 bg-slate-900 border border-fuchsia-500/20 rounded-2xl text-xs font-mono text-center" />
                                 <button onClick={() => {
-                                    const bmr = calculateBMR(onboarding.gender, onboarding.weight, onboarding.height, onboarding.age);
-                                    setUser({ ...onboarding, target: Math.round(bmr * onboarding.activity) });
-                                }} className="w-full bg-emerald-600 py-5 rounded-2xl font-black uppercase tracking-widest">Starten</button>
+                                    const bmr = (10 * onboarding.weight) + (6.25 * 175) - (5 * 30);
+                                    setUser({ ...onboarding, target: Math.round(bmr * 1.4) });
+                                }} className="w-full bg-emerald-600 py-5 rounded-2xl font-black uppercase tracking-widest mt-4 shadow-xl active:scale-95 transition-all">Los geht's</button>
                             </div>
                         </div>
                     )}
 
                     {view === 'dashboard' && (
                         <div className="p-6">
-                            <div className="flex justify-between items-center mb-8">
-                                <h2 className="text-2xl font-black">Heute</h2>
-                                <button onClick={() => setView('profile')} className="p-3 glass-card rounded-2xl"><UserIcon size={20} className="text-emerald-400"/></button>
+                            <div className="flex justify-between items-center mb-8 mt-4">
+                                <div>
+                                    <h2 className="text-3xl font-black tracking-tight text-white">Heute</h2>
+                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">Status Quo</p>
+                                </div>
+                                <button onClick={() => setView('profile')} className="p-4 glass-card rounded-2xl border border-white/10 active:scale-90 transition-all"><UserIcon size={24} className="text-emerald-400"/></button>
                             </div>
 
-                            <div className="glass-card rounded-[2.5rem] p-6 mb-8 shadow-2xl">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
+                            <div className="glass-card rounded-[2.5rem] p-8 mb-10 shadow-2xl border border-white/10 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl -z-10"></div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 items-center">
                                     <ProgressRing consumed={totals.kcal} target={user?.target || 2000} />
-                                    <div className="grid grid-cols-1 gap-3">
+                                    <div className="space-y-3">
                                         <MacroTile label="Protein" value={totals.p} color="text-fuchsia-400" />
-                                        <MacroTile label="Carbs" value={totals.c} subLabel="davon Zucker" subValue={totals.s} color="text-blue-400" subColor="text-blue-300" />
-                                        <MacroTile label="Fett" value={totals.f} subLabel="Gesättigt / Unges." subValue={totals.sf} color="text-amber-400" subColor="text-emerald-400" />
+                                        <MacroTile label="Kohlenhydrate" value={totals.c} subLabel="Zucker" subValue={totals.s} color="text-blue-400" subColor="text-blue-300" />
+                                        <MacroTile label="Fette" value={totals.f} subLabel="Gesättigt / Ung." subValue={totals.sf} color="text-amber-400" subColor="text-emerald-400" />
                                     </div>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
-                                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Einträge</h3>
-                                {dailyLog.items.length === 0 && <div className="text-center py-10 text-slate-600 font-bold uppercase text-[10px] tracking-widest">Noch leer</div>}
-                                {dailyLog.items.map(item => (
-                                    <div key={item.instanceId} className="glass-card p-4 rounded-3xl flex justify-between items-center">
-                                        <div className="flex items-center gap-4">
-                                            {item.image ? <img src={item.image} className="w-12 h-12 rounded-xl object-cover" /> : <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-slate-600"><Utensils size={20}/></div>}
-                                            <div>
-                                                <div className="font-bold text-sm">{item.name}</div>
-                                                <div className="text-[10px] font-black text-slate-500 uppercase">{item.calories} kcal</div>
-                                            </div>
-                                        </div>
-                                        <button onClick={() => setDailyLog(prev => ({...prev, items: prev.items.filter(i => i.instanceId !== item.instanceId)}))} className="text-slate-600"><Trash2 size={18}/></button>
+                                <div className="flex justify-between items-center px-2">
+                                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Verlauf</h3>
+                                    <span className="text-[10px] font-black text-emerald-500/50 uppercase">{dailyLog.items.length} Einträge</span>
+                                </div>
+                                {dailyLog.items.length === 0 && (
+                                    <div className="text-center py-20 bg-slate-900/30 rounded-[2rem] border border-dashed border-white/5">
+                                        <Utensils size={40} className="mx-auto text-slate-800 mb-4" />
+                                        <p className="text-slate-600 font-bold uppercase text-[10px] tracking-widest">Noch nichts gegessen</p>
                                     </div>
-                                )).reverse()}
+                                )}
+                                <div className="space-y-3">
+                                    {[...dailyLog.items].reverse().map(item => (
+                                        <div key={item.instanceId} className="glass-card p-4 rounded-[1.8rem] flex justify-between items-center group animate-in slide-in-from-right duration-300">
+                                            <div className="flex items-center gap-4">
+                                                {item.image ? <img src={item.image} className="w-14 h-14 rounded-2xl object-cover border border-white/10 shadow-lg" /> : <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600 border border-white/5"><Utensils size={24}/></div>}
+                                                <div>
+                                                    <div className="font-bold text-white tracking-tight">{item.name}</div>
+                                                    <div className="text-[10px] font-black text-slate-500 uppercase mt-0.5">{item.calories} kcal <span className="opacity-30">•</span> {item.protein}g P</div>
+                                                </div>
+                                            </div>
+                                            <button onClick={() => setDailyLog(prev => ({...prev, items: prev.items.filter(i => i.instanceId !== item.instanceId)}))} className="p-3 text-slate-600 hover:text-rose-500 transition-all active:scale-75"><Trash2 size={20}/></button>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}
 
                     {view === 'addFood' && (
                         <div className="p-6">
-                            <div className="flex items-center gap-4 mb-6">
-                                <button onClick={() => setView('dashboard')} className="p-3 glass-card rounded-2xl"><ArrowLeft size={20}/></button>
-                                <h2 className="text-2xl font-black">Hinzufügen</h2>
+                            <div className="flex items-center gap-4 mb-8 mt-4">
+                                <button onClick={() => { setView('dashboard'); setApiResults([]); }} className="p-4 glass-card rounded-2xl active:scale-90 transition-all"><ArrowLeft size={24}/></button>
+                                <h2 className="text-3xl font-black tracking-tight">Hinzufügen</h2>
                             </div>
                             
-                            <div className="space-y-4 mb-8">
-                                <div className="flex gap-2">
-                                    <input type="text" placeholder="Suchen oder Beschreiben..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="flex-1 p-4 bg-slate-900 border border-white/5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
-                                    <button onClick={() => setIsScanning(true)} className="p-4 bg-blue-600 rounded-2xl shadow-lg"><ScanBarcode size={24}/></button>
+                            <div className="space-y-5 mb-10">
+                                <div className="relative group">
+                                    <input type="text" placeholder="Beschreibe dein Essen..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/10 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/20 text-white font-bold transition-all" />
+                                    <button onClick={() => setIsScanning(true)} className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-blue-600 rounded-xl shadow-lg active:scale-90 transition-all" title="Barcode scannen"><ScanBarcode size={22} className="text-white"/></button>
                                 </div>
-                                <div className="flex gap-2">
-                                    <button onClick={() => askGemini(searchQuery)} disabled={isThinking || searchQuery.length < 2} className="flex-1 bg-fuchsia-600/10 border border-fuchsia-500/20 text-fuchsia-400 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
-                                        {isThinking ? <Loader size={14}/> : <Sparkles size={14}/>} AI Text
+                                <div className="flex gap-3">
+                                    <button onClick={() => askGemini(searchQuery)} disabled={isThinking || searchQuery.length < 2} className="flex-1 bg-slate-900 hover:bg-slate-800 border border-white/10 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-30">
+                                        {isThinking ? <Loader size={14}/> : <Sparkles size={14} className="text-fuchsia-400"/>} AI Text
                                     </button>
-                                    <button onClick={() => aiFileRef.current.click()} disabled={isThinking} className="flex-1 bg-emerald-600 text-slate-950 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
+                                    <button onClick={() => aiFileRef.current.click()} disabled={isThinking} className="flex-1 bg-emerald-600 text-slate-950 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
                                         {isThinking ? <Loader size={14}/> : <Camera size={14}/>} AI Foto
                                     </button>
                                 </div>
                                 <input type="file" accept="image/*" capture="environment" ref={aiFileRef} className="hidden" onChange={async e => {
                                     if(e.target.files[0]) {
                                         const base64 = await resizeImage(e.target.files[0]);
-                                        askGemini(null, base64);
+                                        setAiImage(base64);
+                                        setShowAiModal(true);
                                     }
                                 }} />
                             </div>
 
-                            <div className="space-y-3">
+                            <div className="space-y-4">
+                                {apiResults.length > 0 && <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest px-2">Ergebnis</h3>}
                                 {apiResults.map(f => (
-                                    <div key={f.id} onClick={() => setSelectedFood(f)} className="glass-card p-4 rounded-3xl flex justify-between items-center animate-in zoom-in">
-                                        <div className="flex items-center gap-4">
-                                            {f.image ? <img src={f.image} className="w-12 h-12 rounded-xl object-cover" /> : <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-slate-600"><Utensils size={20}/></div>}
-                                            <div><div className="font-bold">{f.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{f.calories} kcal</div></div>
+                                    <div key={f.id || 'res'} onClick={() => setSelectedFood(f)} className="glass-card p-5 rounded-[2rem] flex justify-between items-center animate-in zoom-in border-emerald-500/20 shadow-emerald-500/5 active:scale-98 transition-all cursor-pointer">
+                                        <div className="flex items-center gap-5">
+                                            {f.image ? <img src={f.image} className="w-16 h-14 rounded-2xl object-cover border border-white/10" /> : <div className="w-16 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600"><Utensils size={28}/></div>}
+                                            <div>
+                                                <div className="font-bold text-lg text-white">{f.name}</div>
+                                                <div className="text-xs font-black text-slate-500 uppercase tracking-widest">{f.calories} kcal <span className="opacity-30">/</span> {f.unit}</div>
+                                            </div>
                                         </div>
-                                        <div className="bg-emerald-500/10 text-emerald-400 p-3 rounded-2xl"><Plus size={20}/></div>
+                                        <div className="bg-emerald-500 text-slate-950 p-3 rounded-2xl shadow-lg"><Plus size={24} strokeWidth={4}/></div>
                                     </div>
                                 ))}
                             </div>
@@ -310,38 +384,50 @@
 
                     {view === 'profile' && (
                         <div className="p-6">
-                            <div className="flex items-center gap-4 mb-8">
-                                <button onClick={() => setView('dashboard')} className="p-3 glass-card rounded-2xl"><ArrowLeft size={20}/></button>
-                                <h2 className="text-2xl font-black">Profil</h2>
+                            <div className="flex items-center gap-4 mb-10 mt-4">
+                                <button onClick={() => setView('dashboard')} className="p-4 glass-card rounded-2xl active:scale-90 transition-all"><ArrowLeft size={24}/></button>
+                                <h2 className="text-3xl font-black tracking-tight">Einstellungen</h2>
                             </div>
-                            <div className="glass-card p-6 rounded-[2.5rem] space-y-6">
-                                <div><label className="text-[10px] font-black text-slate-500 uppercase block mb-2">Ziel Kalorien</label>
-                                <input type="number" value={user?.target} onChange={e => setUser({...user, target: Number(e.target.value)})} className="w-full p-4 bg-slate-800 rounded-2xl font-bold" /></div>
-                                <div><label className="text-[10px] font-black text-fuchsia-400 uppercase block mb-2">Gemini API Key</label>
-                                <input type="password" value={user?.geminiApiKey} onChange={e => setUser({...user, geminiApiKey: e.target.value})} className="w-full p-4 bg-slate-800 rounded-2xl font-mono text-xs" /></div>
-                                <button onClick={() => { if(confirm("App zurücksetzen?")) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-slate-900 border border-rose-500/20 text-rose-500 py-4 rounded-2xl font-black text-[10px] uppercase">Reset</button>
+                            <div className="glass-card p-8 rounded-[2.5rem] space-y-8 shadow-2xl">
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] block mb-3">Tagesziel</label>
+                                    <div className="relative">
+                                        <input type="number" value={user?.target} onChange={e => setUser({...user, target: Number(e.target.value)})} className="w-full p-5 bg-slate-800 rounded-2xl font-black text-xl outline-none focus:ring-2 focus:ring-emerald-500 shadow-inner" />
+                                        <span className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-500 font-bold uppercase text-[10px]">kcal</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-black text-fuchsia-400 uppercase tracking-[0.2em] block mb-3">Gemini API Key</label>
+                                    <input type="password" value={user?.geminiApiKey} onChange={e => setUser({...user, geminiApiKey: e.target.value})} className="w-full p-5 bg-slate-800 rounded-2xl font-mono text-xs shadow-inner" />
+                                </div>
+                                <div className="pt-6 border-t border-white/5 space-y-4">
+                                    <button onClick={() => { if(confirm("App zurücksetzen? Alle Daten gehen verloren.")) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-slate-950 border border-rose-500/20 text-rose-500 py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:bg-rose-500/10 transition-all shadow-lg"><Trash2 size={16}/> App zurücksetzen</button>
+                                </div>
                             </div>
                         </div>
                     )}
 
                     {/* NAV */}
-                    <div className="fixed bottom-6 left-0 right-0 px-6 pointer-events-none">
-                        <div className="max-w-md mx-auto h-20 glass-card rounded-[2.5rem] flex items-center justify-around pointer-events-auto shadow-2xl border-t border-white/10">
-                            <button onClick={() => setView('dashboard')} className={view==='dashboard'?'text-emerald-400':'text-slate-500'}><Home size={28}/></button>
-                            <button onClick={() => setView('addFood')} className="bg-emerald-500 text-slate-950 p-4 rounded-2xl -top-6 relative border-4 border-slate-950"><Plus size={28} strokeWidth={3}/></button>
-                            <button onClick={() => setView('profile')} className={view==='profile'?'text-emerald-400':'text-slate-500'}><UserIcon size={28}/></button>
+                    <div className="fixed bottom-8 left-0 right-0 px-8 pointer-events-none z-[80]">
+                        <div className="max-w-xs mx-auto h-20 glass-card rounded-[2.5rem] flex items-center justify-around pointer-events-auto shadow-[0_20px_60px_rgba(0,0,0,0.6)] border-t border-white/10 p-2">
+                            <button onClick={() => { setView('dashboard'); setApiResults([]); }} className={`p-4 rounded-2xl transition-all ${view==='dashboard'?'text-emerald-400 bg-emerald-500/10 shadow-inner':'text-slate-600'}`}><Home size={28}/></button>
+                            <button onClick={() => setView('addFood')} className="bg-emerald-500 text-slate-950 p-5 rounded-3xl -top-10 relative border-[6px] border-slate-950 shadow-2xl active:scale-90 active:-top-8 transition-all"><Plus size={32} strokeWidth={4}/></button>
+                            <button onClick={() => setView('profile')} className={`p-4 rounded-2xl transition-all ${view==='profile'?'text-emerald-400 bg-emerald-500/10 shadow-inner':'text-slate-600'}`}><UserIcon size={28}/></button>
                         </div>
                     </div>
 
                     {/* BARCODE SCANNER MODAL */}
                     {isScanning && (
-                        <div className="fixed inset-0 bg-slate-950 z-[100] flex flex-col items-center justify-center p-6">
-                            <div className="w-full max-w-md glass-card rounded-[2.5rem] overflow-hidden">
-                                <div className="flex justify-between items-center p-6 border-b border-white/5">
-                                    <h3 className="font-black">Barcode Scan</h3>
-                                    <button onClick={() => setIsScanning(false)}><X/></button>
+                        <div className="fixed inset-0 bg-slate-950 z-[120] flex flex-col items-center justify-center p-6 backdrop-blur-3xl">
+                            <div className="w-full max-w-md glass-card rounded-[3rem] overflow-hidden shadow-2xl">
+                                <div className="flex justify-between items-center p-8 border-b border-white/5">
+                                    <h3 className="font-black tracking-tight text-xl">Barcode Scan</h3>
+                                    <button onClick={() => setIsScanning(false)} className="p-2 bg-slate-800 rounded-full"><X/></button>
                                 </div>
-                                <div id="qr-reader" className="w-full aspect-square bg-black"></div>
+                                <div className="p-6">
+                                    <div id="qr-reader" className="w-full aspect-square bg-slate-950 rounded-[2rem] shadow-inner"></div>
+                                </div>
+                                <div className="p-8 text-center text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] bg-slate-900/30">Produkt im Rahmen halten</div>
                             </div>
                         </div>
                     )}
