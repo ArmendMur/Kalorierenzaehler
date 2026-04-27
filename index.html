@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KaloTrack – Simpel & Smart</title>
+    <title>KaloTrack – Lila Edition</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,7 +20,10 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { slate: { 850: '#151e2d', 950: '#070b14' } }
+                    colors: { 
+                        slate: { 850: '#151e2d', 950: '#070b14' },
+                        brand: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed' } // Lila Akzent
+                    }
                 }
             }
         }
@@ -93,7 +96,7 @@
                 <div className="relative flex items-center justify-center">
                     <svg height={radius * 2} width={radius * 2} className="transform -rotate-90 filter drop-shadow-2xl">
                         <circle stroke="#1e293b" strokeWidth={stroke} fill="transparent" r={normRadius} cx={radius} cy={radius} />
-                        <circle stroke="#10b981" strokeWidth={stroke} strokeDasharray={circ + ' ' + circ} style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s ease' }} strokeLinecap="round" fill="transparent" r={normRadius} cx={radius} cy={radius} />
+                        <circle stroke="#8b5cf6" strokeWidth={stroke} strokeDasharray={circ + ' ' + circ} style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s ease' }} strokeLinecap="round" fill="transparent" r={normRadius} cx={radius} cy={radius} />
                     </svg>
                     <div className="absolute text-center">
                         <div className="text-3xl font-black text-white">{Math.max(0, Math.round(target - consumed))}</div>
@@ -107,12 +110,12 @@
             <div className="bg-slate-900/50 p-4 rounded-[1.5rem] border border-white/5">
                 <div className="flex justify-between items-center mb-1">
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">{label}</span>
-                    <span className={`text-sm font-black ${color}`}>{Math.round(value)}g</span>
+                    <span className={`text-sm font-black ${color}`}>{Math.round(value || 0)}g</span>
                 </div>
                 {subLabel && (
                     <div className="flex justify-between items-center border-t border-white/5 pt-2 mt-2">
                         <span className="text-[8px] font-black text-slate-600 uppercase tracking-wider">{subLabel}</span>
-                        <span className={`text-[10px] font-black ${subColor}`}>{Math.round(subValue)}g</span>
+                        <span className={`text-[10px] font-black ${subColor}`}>{Math.round(subValue || 0)}g</span>
                     </div>
                 )}
             </div>
@@ -133,6 +136,7 @@
             const [isThinking, setIsThinking] = useState(false);
             const [isScanning, setIsScanning] = useState(false);
             const [selectedFood, setSelectedFood] = useState(null);
+            const [showDetails, setShowDetails] = useState(null);
             
             const [aiImage, setAiImage] = useState(null);
             const [aiDesc, setAiDesc] = useState('');
@@ -182,13 +186,13 @@
             };
 
             const totals = useMemo(() => dailyLog.items.reduce((acc, i) => ({
-                kcal: acc.kcal + i.calories,
-                p: acc.p + i.protein,
-                c: acc.c + i.carbs,
-                s: acc.s + i.sugar,
-                f: acc.f + i.fat,
-                sf: acc.sf + i.saturatedFat,
-                uf: acc.uf + i.unsaturatedFat
+                kcal: acc.kcal + (Number(i.calories) || 0),
+                p: acc.p + (Number(i.protein) || 0),
+                c: acc.c + (Number(i.carbs) || 0),
+                s: acc.s + (Number(i.sugar) || 0),
+                f: acc.f + (Number(i.fat) || 0),
+                sf: acc.sf + (Number(i.saturatedFat) || 0),
+                uf: acc.uf + (Number(i.unsaturatedFat) || 0)
             }), { kcal: 0, p: 0, c: 0, s: 0, f: 0, sf: 0, uf: 0 }), [dailyLog]);
 
             const askGemini = async (text, img = null) => {
@@ -227,17 +231,50 @@
             return (
                 <div className="max-w-md mx-auto min-h-screen relative pb-32">
                     
+                    {/* DETAILS MODAL */}
+                    {showDetails && (
+                        <div className="fixed inset-0 bg-slate-950/95 z-[130] flex items-center justify-center p-6 backdrop-blur-xl">
+                            <div className="w-full glass-card rounded-[3rem] p-8 space-y-6">
+                                <div className="flex justify-between items-start">
+                                    <h3 className="text-2xl font-black">{showDetails.name}</h3>
+                                    <button onClick={() => setShowDetails(null)} className="p-2 bg-slate-800 rounded-full"><X size={20}/></button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5">
+                                        <div className="text-[10px] font-black text-slate-500 uppercase mb-1">Energie</div>
+                                        <div className="text-lg font-black text-brand-400">{showDetails.calories} kcal</div>
+                                    </div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5">
+                                        <div className="text-[10px] font-black text-slate-500 uppercase mb-1">Protein</div>
+                                        <div className="text-lg font-black text-fuchsia-400">{showDetails.protein}g</div>
+                                    </div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2">
+                                        <div className="text-[10px] font-black text-slate-500 uppercase mb-1">Kohlenhydrate</div>
+                                        <div className="text-lg font-black text-blue-400">{showDetails.carbs}g</div>
+                                        <div className="text-xs text-blue-300/60 mt-1">davon {showDetails.sugar}g Zucker</div>
+                                    </div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2">
+                                        <div className="text-[10px] font-black text-slate-500 uppercase mb-1">Fett</div>
+                                        <div className="text-lg font-black text-amber-400">{showDetails.fat}g</div>
+                                        <div className="text-xs text-amber-300/60 mt-1">{showDetails.saturatedFat}g gesättigt / {showDetails.unsaturatedFat}g ungesättigt</div>
+                                    </div>
+                                </div>
+                                <button onClick={() => setShowDetails(null)} className="w-full py-4 bg-brand-600 rounded-2xl font-black uppercase tracking-widest">Schließen</button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* AI PHOTO DESCRIPTION MODAL */}
                     {showAiModal && (
                         <div className="fixed inset-0 bg-slate-950/95 z-[110] flex items-center justify-center p-6 backdrop-blur-xl">
                             <div className="w-full glass-card rounded-[2.5rem] p-8 space-y-6">
-                                <h3 className="text-xl font-black flex items-center gap-3"><Camera className="text-emerald-400"/> Foto-Info</h3>
+                                <h3 className="text-xl font-black flex items-center gap-3"><Camera className="text-brand-400"/> Foto-Info</h3>
                                 <img src={aiImage} className="w-full h-40 object-cover rounded-2xl border border-white/10" />
-                                <textarea placeholder="Optional: Was ist genau zu sehen? (z.B. Extra Soße, 200g Reis...)" value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-4 bg-slate-800 rounded-2xl border border-white/5 focus:ring-2 focus:ring-emerald-500 outline-none text-sm h-24" />
+                                <textarea placeholder="Zusätzliche Infos für die KI..." value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-4 bg-slate-800 rounded-2xl border border-white/5 focus:ring-2 focus:ring-brand-500 outline-none text-sm h-24" />
                                 <div className="flex gap-3">
-                                    <button onClick={() => setShowAiModal(false)} className="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">Abbruch</button>
-                                    <button onClick={() => askGemini(aiDesc, aiImage)} disabled={isThinking} className="flex-1 py-4 bg-emerald-500 text-slate-950 rounded-2xl font-black flex items-center justify-center gap-2">
-                                        {isThinking ? <Loader size={18}/> : "Analysieren"}
+                                    <button onClick={() => setShowAiModal(false)} className="flex-1 py-4 bg-slate-800 rounded-2xl font-bold text-sm">Abbruch</button>
+                                    <button onClick={() => askGemini(aiDesc, aiImage)} disabled={isThinking} className="flex-1 py-4 bg-brand-500 text-slate-950 rounded-2xl font-black flex items-center justify-center gap-2">
+                                        {isThinking ? <Loader size={18}/> : "OK"}
                                     </button>
                                 </div>
                             </div>
@@ -247,22 +284,22 @@
                     {/* MENGEN MODAL */}
                     {selectedFood && (
                         <div className="fixed inset-0 bg-slate-950/90 z-[100] flex items-end backdrop-blur-sm p-4">
-                            <div className="w-full glass-card rounded-[3rem] p-8 animate-in slide-in-from-bottom shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+                            <div className="w-full glass-card rounded-[3rem] p-8 animate-in slide-in-from-bottom shadow-2xl">
                                 <div className="flex justify-between items-center mb-8">
                                     <h3 className="text-2xl font-black">{selectedFood.name}</h3>
                                     <button onClick={() => setSelectedFood(null)} className="p-2 bg-slate-800 rounded-full"><X size={20}/></button>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4 mb-8">
-                                    <div className="p-4 bg-slate-900/50 rounded-2xl border border-white/5 text-center">
-                                        <div className="text-[10px] font-black text-slate-500 uppercase">Kalorien</div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 text-center">
+                                        <div className="text-[10px] font-black text-slate-500 uppercase">Energie</div>
                                         <div className="text-xl font-black text-white">{selectedFood.calories} kcal</div>
                                     </div>
-                                    <div className="p-4 bg-slate-900/50 rounded-2xl border border-white/5 text-center">
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 text-center">
                                         <div className="text-[10px] font-black text-slate-500 uppercase">Portion</div>
                                         <div className="text-xl font-black text-white">{selectedFood.unit}</div>
                                     </div>
                                 </div>
-                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-emerald-500 text-slate-950 py-5 rounded-[1.5rem] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">Bestätigen</button>
+                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-brand-500 text-slate-950 py-5 rounded-[1.5rem] font-black uppercase tracking-widest active:scale-95 transition-all shadow-xl shadow-brand-500/20">Bestätigen</button>
                             </div>
                         </div>
                     )}
@@ -270,16 +307,13 @@
                     {/* VIEWS */}
                     {view === 'onboarding' && (
                         <div className="p-10 pt-24 text-center">
-                            <div className="inline-block p-6 bg-emerald-500/10 rounded-[2.5rem] mb-8 border border-emerald-500/20"><Utensils size={48} className="text-emerald-400"/></div>
+                            <div className="inline-block p-6 bg-brand-500/10 rounded-[2.5rem] mb-8 border border-brand-500/20"><Utensils size={48} className="text-brand-400"/></div>
                             <h1 className="text-4xl font-black mb-4 tracking-tighter text-white">KaloTrack</h1>
-                            <p className="text-slate-500 font-bold mb-12 uppercase text-[10px] tracking-[0.2em]">Dein smarter Begleiter 2026</p>
+                            <p className="text-slate-500 font-bold mb-12 uppercase text-[10px] tracking-[0.2em]">Dein smarter Begleiter</p>
                             <div className="space-y-4 max-w-xs mx-auto">
-                                <input type="number" placeholder="Gewicht (kg)" onChange={e => setOnboarding({...onboarding, weight: Number(e.target.value)})} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500" />
-                                <input type="password" placeholder="Gemini API Key" onChange={e => setOnboarding({...onboarding, geminiApiKey: e.target.value})} className="w-full p-5 bg-slate-900 border border-fuchsia-500/20 rounded-2xl text-xs font-mono text-center" />
-                                <button onClick={() => {
-                                    const bmr = (10 * onboarding.weight) + (6.25 * 175) - (5 * 30);
-                                    setUser({ ...onboarding, target: Math.round(bmr * 1.4) });
-                                }} className="w-full bg-emerald-600 py-5 rounded-2xl font-black uppercase tracking-widest mt-4 shadow-xl active:scale-95 transition-all">Los geht's</button>
+                                <input type="number" placeholder="Ziel Kalorien (kcal)" onChange={e => setUser({...user, target: Number(e.target.value), targetP: 150, targetC: 250, targetF: 70, targetS: 50})} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 text-center font-bold" />
+                                <input type="password" placeholder="Gemini API Key" onChange={e => setUser({...user, geminiApiKey: e.target.value})} className="w-full p-5 bg-slate-900 border border-fuchsia-500/20 rounded-2xl text-xs font-mono text-center" />
+                                <button onClick={() => setView('dashboard')} className="w-full bg-brand-600 py-5 rounded-2xl font-black uppercase tracking-widest mt-4 shadow-xl active:scale-95 transition-all">Starten</button>
                             </div>
                         </div>
                     )}
@@ -289,19 +323,19 @@
                             <div className="flex justify-between items-center mb-8 mt-4">
                                 <div>
                                     <h2 className="text-3xl font-black tracking-tight text-white">Heute</h2>
-                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">Status Quo</p>
+                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">{new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'long' })}</p>
                                 </div>
-                                <button onClick={() => setView('profile')} className="p-4 glass-card rounded-2xl border border-white/10 active:scale-90 transition-all"><UserIcon size={24} className="text-emerald-400"/></button>
+                                <button onClick={() => setView('profile')} className="p-4 glass-card rounded-2xl border border-white/10 active:scale-90 transition-all"><UserIcon size={24} className="text-brand-400"/></button>
                             </div>
 
                             <div className="glass-card rounded-[2.5rem] p-8 mb-10 shadow-2xl border border-white/10 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl -z-10"></div>
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 blur-3xl -z-10"></div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 items-center">
                                     <ProgressRing consumed={totals.kcal} target={user?.target || 2000} />
                                     <div className="space-y-3">
                                         <MacroTile label="Protein" value={totals.p} color="text-fuchsia-400" />
                                         <MacroTile label="Kohlenhydrate" value={totals.c} subLabel="Zucker" subValue={totals.s} color="text-blue-400" subColor="text-blue-300" />
-                                        <MacroTile label="Fette" value={totals.f} subLabel="Gesättigt / Ung." subValue={totals.sf} color="text-amber-400" subColor="text-emerald-400" />
+                                        <MacroTile label="Fett" value={totals.f} subLabel="Gesättigt" subValue={totals.sf} color="text-amber-400" subColor="text-amber-300" />
                                     </div>
                                 </div>
                             </div>
@@ -309,25 +343,19 @@
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center px-2">
                                     <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Verlauf</h3>
-                                    <span className="text-[10px] font-black text-emerald-500/50 uppercase">{dailyLog.items.length} Einträge</span>
+                                    <span className="text-[10px] font-black text-brand-500/50 uppercase">{dailyLog.items.length} Posten</span>
                                 </div>
-                                {dailyLog.items.length === 0 && (
-                                    <div className="text-center py-20 bg-slate-900/30 rounded-[2rem] border border-dashed border-white/5">
-                                        <Utensils size={40} className="mx-auto text-slate-800 mb-4" />
-                                        <p className="text-slate-600 font-bold uppercase text-[10px] tracking-widest">Noch nichts gegessen</p>
-                                    </div>
-                                )}
                                 <div className="space-y-3">
                                     {[...dailyLog.items].reverse().map(item => (
-                                        <div key={item.instanceId} className="glass-card p-4 rounded-[1.8rem] flex justify-between items-center group animate-in slide-in-from-right duration-300">
+                                        <div key={item.instanceId} className="glass-card p-4 rounded-[1.8rem] flex justify-between items-center group animate-in slide-in-from-right duration-300 cursor-pointer active:scale-[0.98] transition-all" onClick={() => setShowDetails(item)}>
                                             <div className="flex items-center gap-4">
-                                                {item.image ? <img src={item.image} className="w-14 h-14 rounded-2xl object-cover border border-white/10 shadow-lg" /> : <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600 border border-white/5"><Utensils size={24}/></div>}
+                                                {item.image ? <img src={item.image} className="w-14 h-14 rounded-2xl object-cover border border-white/10" /> : <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600"><Utensils size={24}/></div>}
                                                 <div>
                                                     <div className="font-bold text-white tracking-tight">{item.name}</div>
                                                     <div className="text-[10px] font-black text-slate-500 uppercase mt-0.5">{item.calories} kcal <span className="opacity-30">•</span> {item.protein}g P</div>
                                                 </div>
                                             </div>
-                                            <button onClick={() => setDailyLog(prev => ({...prev, items: prev.items.filter(i => i.instanceId !== item.instanceId)}))} className="p-3 text-slate-600 hover:text-rose-500 transition-all active:scale-75"><Trash2 size={20}/></button>
+                                            <button onClick={(e) => { e.stopPropagation(); setDailyLog(prev => ({...prev, items: prev.items.filter(i => i.instanceId !== item.instanceId)})); }} className="p-3 text-slate-600 hover:text-rose-500 active:scale-75 transition-all"><Trash2 size={20}/></button>
                                         </div>
                                     ))}
                                 </div>
@@ -344,14 +372,14 @@
                             
                             <div className="space-y-5 mb-10">
                                 <div className="relative group">
-                                    <input type="text" placeholder="Beschreibe dein Essen..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/10 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/20 text-white font-bold transition-all" />
-                                    <button onClick={() => setIsScanning(true)} className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-blue-600 rounded-xl shadow-lg active:scale-90 transition-all" title="Barcode scannen"><ScanBarcode size={22} className="text-white"/></button>
+                                    <input type="text" placeholder="Essen beschreiben..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/10 rounded-2xl outline-none focus:ring-4 focus:ring-brand-500/20 text-white font-bold transition-all" />
+                                    <button onClick={() => setIsScanning(true)} className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-brand-600 rounded-xl shadow-lg active:scale-90" title="Barcode"><ScanBarcode size={22} className="text-white"/></button>
                                 </div>
                                 <div className="flex gap-3">
                                     <button onClick={() => askGemini(searchQuery)} disabled={isThinking || searchQuery.length < 2} className="flex-1 bg-slate-900 hover:bg-slate-800 border border-white/10 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-30">
-                                        {isThinking ? <Loader size={14}/> : <Sparkles size={14} className="text-fuchsia-400"/>} AI Text
+                                        {isThinking ? <Loader size={14}/> : <Sparkles size={14} className="text-brand-400"/>} AI Text
                                     </button>
-                                    <button onClick={() => aiFileRef.current.click()} disabled={isThinking} className="flex-1 bg-emerald-600 text-slate-950 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
+                                    <button onClick={() => aiFileRef.current.click()} disabled={isThinking} className="flex-1 bg-brand-600 text-slate-950 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg active:scale-95">
                                         {isThinking ? <Loader size={14}/> : <Camera size={14}/>} AI Foto
                                     </button>
                                 </div>
@@ -365,9 +393,8 @@
                             </div>
 
                             <div className="space-y-4">
-                                {apiResults.length > 0 && <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest px-2">Ergebnis</h3>}
                                 {apiResults.map(f => (
-                                    <div key={f.id || 'res'} onClick={() => setSelectedFood(f)} className="glass-card p-5 rounded-[2rem] flex justify-between items-center animate-in zoom-in border-emerald-500/20 shadow-emerald-500/5 active:scale-98 transition-all cursor-pointer">
+                                    <div key={f.id || 'res'} onClick={() => setSelectedFood(f)} className="glass-card p-5 rounded-[2rem] flex justify-between items-center animate-in zoom-in border-brand-500/20 active:scale-98 transition-all cursor-pointer">
                                         <div className="flex items-center gap-5">
                                             {f.image ? <img src={f.image} className="w-16 h-14 rounded-2xl object-cover border border-white/10" /> : <div className="w-16 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600"><Utensils size={28}/></div>}
                                             <div>
@@ -375,7 +402,7 @@
                                                 <div className="text-xs font-black text-slate-500 uppercase tracking-widest">{f.calories} kcal <span className="opacity-30">/</span> {f.unit}</div>
                                             </div>
                                         </div>
-                                        <div className="bg-emerald-500 text-slate-950 p-3 rounded-2xl shadow-lg"><Plus size={24} strokeWidth={4}/></div>
+                                        <div className="bg-brand-500 text-slate-950 p-3 rounded-2xl shadow-lg"><Plus size={24} strokeWidth={4}/></div>
                                     </div>
                                 ))}
                             </div>
@@ -386,22 +413,20 @@
                         <div className="p-6">
                             <div className="flex items-center gap-4 mb-10 mt-4">
                                 <button onClick={() => setView('dashboard')} className="p-4 glass-card rounded-2xl active:scale-90 transition-all"><ArrowLeft size={24}/></button>
-                                <h2 className="text-3xl font-black tracking-tight">Einstellungen</h2>
+                                <h2 className="text-3xl font-black tracking-tight text-white">Ziele</h2>
                             </div>
-                            <div className="glass-card p-8 rounded-[2.5rem] space-y-8 shadow-2xl">
-                                <div>
-                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] block mb-3">Tagesziel</label>
-                                    <div className="relative">
-                                        <input type="number" value={user?.target} onChange={e => setUser({...user, target: Number(e.target.value)})} className="w-full p-5 bg-slate-800 rounded-2xl font-black text-xl outline-none focus:ring-2 focus:ring-emerald-500 shadow-inner" />
-                                        <span className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-500 font-bold uppercase text-[10px]">kcal</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-black text-fuchsia-400 uppercase tracking-[0.2em] block mb-3">Gemini API Key</label>
-                                    <input type="password" value={user?.geminiApiKey} onChange={e => setUser({...user, geminiApiKey: e.target.value})} className="w-full p-5 bg-slate-800 rounded-2xl font-mono text-xs shadow-inner" />
+                            <div className="glass-card p-8 rounded-[2.5rem] space-y-6 shadow-2xl overflow-y-auto max-h-[70vh]">
+                                <div className="grid grid-cols-1 gap-6">
+                                    <GoalInput label="Kalorien" value={user?.target} unit="kcal" onChange={v => setUser({...user, target: v})} />
+                                    <GoalInput label="Protein" value={user?.targetP} unit="g" color="text-fuchsia-400" onChange={v => setUser({...user, targetP: v})} />
+                                    <GoalInput label="Kohlenhydrate" value={user?.targetC} unit="g" color="text-blue-400" onChange={v => setUser({...user, targetC: v})} />
+                                    <GoalInput label="Fett" value={user?.targetF} unit="g" color="text-amber-400" onChange={v => setUser({...user, targetF: v})} />
+                                    <GoalInput label="Zucker" value={user?.targetS} unit="g" color="text-blue-300" onChange={v => setUser({...user, targetS: v})} />
                                 </div>
                                 <div className="pt-6 border-t border-white/5 space-y-4">
-                                    <button onClick={() => { if(confirm("App zurücksetzen? Alle Daten gehen verloren.")) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-slate-950 border border-rose-500/20 text-rose-500 py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:bg-rose-500/10 transition-all shadow-lg"><Trash2 size={16}/> App zurücksetzen</button>
+                                    <label className="text-[10px] font-black text-fuchsia-400 uppercase block">Gemini API Key</label>
+                                    <input type="password" value={user?.geminiApiKey} onChange={e => setUser({...user, geminiApiKey: e.target.value})} className="w-full p-4 bg-slate-800 rounded-2xl font-mono text-xs shadow-inner outline-none" />
+                                    <button onClick={() => { if(confirm("App zurücksetzen?")) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-rose-500/10 border border-rose-500/20 text-rose-500 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest mt-4">App zurücksetzen</button>
                                 </div>
                             </div>
                         </div>
@@ -409,31 +434,38 @@
 
                     {/* NAV */}
                     <div className="fixed bottom-8 left-0 right-0 px-8 pointer-events-none z-[80]">
-                        <div className="max-w-xs mx-auto h-20 glass-card rounded-[2.5rem] flex items-center justify-around pointer-events-auto shadow-[0_20px_60px_rgba(0,0,0,0.6)] border-t border-white/10 p-2">
-                            <button onClick={() => { setView('dashboard'); setApiResults([]); }} className={`p-4 rounded-2xl transition-all ${view==='dashboard'?'text-emerald-400 bg-emerald-500/10 shadow-inner':'text-slate-600'}`}><Home size={28}/></button>
-                            <button onClick={() => setView('addFood')} className="bg-emerald-500 text-slate-950 p-5 rounded-3xl -top-10 relative border-[6px] border-slate-950 shadow-2xl active:scale-90 active:-top-8 transition-all"><Plus size={32} strokeWidth={4}/></button>
-                            <button onClick={() => setView('profile')} className={`p-4 rounded-2xl transition-all ${view==='profile'?'text-emerald-400 bg-emerald-500/10 shadow-inner':'text-slate-600'}`}><UserIcon size={28}/></button>
+                        <div className="max-w-xs mx-auto h-20 glass-card rounded-[2.5rem] flex items-center justify-around pointer-events-auto shadow-2xl border-t border-white/10 p-2">
+                            <button onClick={() => setView('dashboard')} className={`p-4 rounded-2xl transition-all ${view==='dashboard'?'text-brand-400 bg-brand-500/10':'text-slate-600'}`}><Home size={28}/></button>
+                            <button onClick={() => setView('addFood')} className="bg-brand-500 text-slate-950 p-5 rounded-3xl -top-10 relative border-[6px] border-slate-950 shadow-2xl active:scale-90 transition-all"><Plus size={32} strokeWidth={4}/></button>
+                            <button onClick={() => setView('profile')} className={`p-4 rounded-2xl transition-all ${view==='profile'?'text-brand-400 bg-brand-500/10':'text-slate-600'}`}><UserIcon size={28}/></button>
                         </div>
                     </div>
 
-                    {/* BARCODE SCANNER MODAL */}
+                    {/* BARCODE MODAL */}
                     {isScanning && (
-                        <div className="fixed inset-0 bg-slate-950 z-[120] flex flex-col items-center justify-center p-6 backdrop-blur-3xl">
-                            <div className="w-full max-w-md glass-card rounded-[3rem] overflow-hidden shadow-2xl">
-                                <div className="flex justify-between items-center p-8 border-b border-white/5">
-                                    <h3 className="font-black tracking-tight text-xl">Barcode Scan</h3>
+                        <div className="fixed inset-0 bg-slate-950 z-[140] flex flex-col items-center justify-center p-6 backdrop-blur-3xl">
+                            <div className="w-full max-w-md glass-card rounded-[3rem] overflow-hidden">
+                                <div className="flex justify-between items-center p-8">
+                                    <h3 className="font-black text-xl">Barcode Scan</h3>
                                     <button onClick={() => setIsScanning(false)} className="p-2 bg-slate-800 rounded-full"><X/></button>
                                 </div>
-                                <div className="p-6">
-                                    <div id="qr-reader" className="w-full aspect-square bg-slate-950 rounded-[2rem] shadow-inner"></div>
-                                </div>
-                                <div className="p-8 text-center text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] bg-slate-900/30">Produkt im Rahmen halten</div>
+                                <div className="p-6"><div id="qr-reader" className="w-full aspect-square bg-black rounded-[2rem]"></div></div>
                             </div>
                         </div>
                     )}
                 </div>
             );
         }
+
+        const GoalInput = ({ label, value, unit, color="text-white", onChange }) => (
+            <div>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">{label}</label>
+                <div className="relative">
+                    <input type="number" value={value || 0} onChange={e => onChange(Number(e.target.value))} className={`w-full p-4 bg-slate-800 rounded-2xl font-black text-xl outline-none focus:ring-2 focus:ring-brand-500 shadow-inner ${color}`} />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 font-bold uppercase text-[10px]">{unit}</span>
+                </div>
+            </div>
+        );
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
