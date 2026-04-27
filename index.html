@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KaloTrack – Pro</title>
+    <title>KaloTrack – Ultimate</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,7 +35,7 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .spinner { animation: spin 1s linear infinite; }
         #qr-reader { border: none !important; width: 100% !important; }
-        #qr-reader video { border-radius: 1.5rem; object-fit: cover !important; width: 100% !important; }
+        #qr-reader video { border-radius: 1.5rem; object-fit: cover !important; }
     </style>
 </head>
 <body class="bg-slate-950">
@@ -45,76 +45,50 @@
         const { useState, useEffect, useMemo, useRef } = React;
         
         // --- ICONS ---
-        const IconWrapper = ({ children, size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
+        const Icon = ({ d, size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d={d}/></svg>
         );
-        const Plus = (p) => <IconWrapper {...p}><path d="M5 12h14"/><path d="M12 5v14"/></IconWrapper>;
-        const Home = (p) => <IconWrapper {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></IconWrapper>;
-        const UserIcon = (p) => <IconWrapper {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></IconWrapper>;
-        const Utensils = (p) => <IconWrapper {...p}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></IconWrapper>;
-        const X = (p) => <IconWrapper {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconWrapper>;
-        const Camera = (p) => <IconWrapper {...p}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></IconWrapper>;
-        const Sparkles = (p) => <IconWrapper {...p}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></IconWrapper>;
-        const ScanBarcode = (p) => <IconWrapper {...p}><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></IconWrapper>;
-        const Trash2 = (p) => <IconWrapper {...p}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></IconWrapper>;
-        const ArrowLeft = (p) => <IconWrapper {...p}><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></IconWrapper>;
-        const Loader = (p) => <IconWrapper {...p} className="spinner"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></IconWrapper>;
-
-        // --- HELPERS ---
-        const resizeImage = (file) => {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800;
-                        const scale = MAX_WIDTH / img.width;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scale;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.6));
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        };
+        const PlusIcon = (p) => <Icon d="M12 5v14M5 12h14" {...p} />;
+        const UserIcon = (p) => <svg xmlns="http://www.w3.org/2000/svg" width={p.size||24} height={p.size||24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={p.className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+        const UtensilsIcon = (p) => <Icon d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" {...p} />;
+        const XIcon = (p) => <Icon d="M18 6 6 18M6 6l12 12" {...p} />;
+        const CameraIcon = (p) => <Icon d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" {...p} />;
+        const SparklesIcon = (p) => <Icon d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" {...p} />;
+        const BarcodeIcon = (p) => <Icon d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" {...p} />;
+        const TrashIcon = (p) => <Icon d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" {...p} />;
+        const ArrowLeftIcon = (p) => <Icon d="m12 19-7-7 7-7M19 12H5" {...p} />;
 
         // --- COMPONENTS ---
         const ProgressRing = ({ consumed, target }) => {
             const radius = 80;
-            const stroke = 12;
-            const normRadius = radius - stroke * 2;
+            const normRadius = radius - 12;
             const circ = normRadius * 2 * Math.PI;
             const percent = Math.min(100, (consumed / (target || 1)) * 100) || 0;
             const offset = circ - (percent / 100) * circ;
-
             return (
                 <div className="relative flex items-center justify-center">
                     <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
-                        <circle stroke="#1e293b" strokeWidth={stroke} fill="transparent" r={normRadius} cx={radius} cy={radius} />
-                        <circle stroke="#8b5cf6" strokeWidth={stroke} strokeDasharray={circ + ' ' + circ} style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s ease' }} strokeLinecap="round" fill="transparent" r={normRadius} cx={radius} cy={radius} />
+                        <circle stroke="#1e293b" strokeWidth="12" fill="transparent" r={normRadius} cx={radius} cy={radius} />
+                        <circle stroke="#8b5cf6" strokeWidth="12" strokeDasharray={circ} style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s' }} strokeLinecap="round" fill="transparent" r={normRadius} cx={radius} cy={radius} />
                     </svg>
                     <div className="absolute text-center">
-                        <div className="text-3xl font-black text-white">{Math.max(0, Math.round(target - consumed))}</div>
-                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">übrig</div>
+                        <div className="text-3xl font-black text-white tracking-tighter">{Math.max(0, Math.round(target - consumed))}</div>
+                        <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">kcal übrig</div>
                     </div>
                 </div>
             );
         };
 
-        const MacroBar = ({ label, value, target, colorClass }) => {
+        const MacroBar = ({ label, value, target, color, indent = false }) => {
             const percent = Math.min(100, (value / (target || 1)) * 100) || 0;
             return (
-                <div className="space-y-1.5">
+                <div className={`${indent ? 'ml-4 opacity-80' : ''} space-y-1.5`}>
                     <div className="flex justify-between items-end px-1">
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{label}</span>
-                        <span className="text-[10px] font-bold text-slate-300">{Math.round(value || 0)}g <span className="text-slate-600">/ {target}g</span></span>
+                        <span className={`text-[9px] font-black uppercase tracking-wider ${indent ? 'text-slate-600' : 'text-slate-500'}`}>{label}</span>
+                        <span className="text-[10px] font-bold text-slate-400">{Math.round(value)}g <span className="opacity-30">/ {target}g</span></span>
                     </div>
-                    <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden border border-white/5 shadow-inner">
-                        <div className={`h-full ${colorClass} rounded-full transition-all duration-1000 ease-out`} style={{ width: `${percent}%` }}></div>
+                    <div className="h-1.5 w-full bg-slate-800/50 rounded-full overflow-hidden">
+                        <div className={`h-full ${color} rounded-full transition-all duration-1000`} style={{ width: `${percent}%` }}></div>
                     </div>
                 </div>
             );
@@ -122,18 +96,14 @@
 
         // --- MAIN APP ---
         function App() {
-            const [user, setUser] = useState(() => {
-                const saved = localStorage.getItem('kTrackUser');
-                return saved ? JSON.parse(saved) : null;
-            });
-            
-            const [view, setView] = useState(user ? 'dashboard' : 'onboarding');
-            
+            const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('kTrackUser')) || { target: 2000, targetP: 150, targetC: 250, targetF: 70, targetS: 50, geminiApiKey: '' });
+            const [view, setView] = useState('dashboard');
             const [dailyLog, setDailyLog] = useState(() => {
                 const saved = JSON.parse(localStorage.getItem('kTrackLog'));
                 const today = new Date().toISOString().split('T')[0];
                 return (saved && saved.date === today) ? saved : { date: today, items: [] };
             });
+            const [itemHistory, setItemHistory] = useState(() => JSON.parse(localStorage.getItem('kTrackHistory')) || []);
             
             const [searchQuery, setSearchQuery] = useState('');
             const [apiResults, setApiResults] = useState([]);
@@ -142,73 +112,17 @@
             const [selectedFood, setSelectedFood] = useState(null);
             const [showDetails, setShowDetails] = useState(null);
             
+            const [amount, setAmount] = useState(100);
+            const [unit, setUnit] = useState('g');
             const [aiImage, setAiImage] = useState(null);
             const [aiDesc, setAiDesc] = useState('');
             const [showAiModal, setShowAiModal] = useState(false);
 
             const aiFileRef = useRef();
-            const html5QrCode = useRef(null);
 
-            useEffect(() => {
-                if (user) localStorage.setItem('kTrackUser', JSON.stringify(user));
-            }, [user]);
-
-            useEffect(() => {
-                localStorage.setItem('kTrackLog', JSON.stringify(dailyLog));
-            }, [dailyLog]);
-
-            // Barcode Scanner Logic
-            const startScanner = async () => {
-                setIsScanning(true);
-                setTimeout(() => {
-                    html5QrCode.current = new Html5Qrcode("qr-reader");
-                    html5QrCode.current.start(
-                        { facingMode: "environment" }, 
-                        { fps: 10, qrbox: { width: 250, height: 250 } },
-                        (decodedText) => {
-                            fetchBarcode(decodedText);
-                            stopScanner();
-                        },
-                        () => {}
-                    ).catch(err => {
-                        alert("Kamera-Fehler. Bitte Berechtigungen prüfen.");
-                        setIsScanning(false);
-                    });
-                }, 300);
-            };
-
-            const stopScanner = () => {
-                if (html5QrCode.current) {
-                    html5QrCode.current.stop().then(() => {
-                        html5QrCode.current.clear();
-                        setIsScanning(false);
-                    }).catch(() => setIsScanning(false));
-                }
-            };
-
-            const fetchBarcode = async (code) => {
-                try {
-                    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
-                    const data = await res.json();
-                    if(data.status === 1) {
-                        const p = data.product;
-                        const item = {
-                            name: p.product_name || "Unbekannt",
-                            calories: Math.round(p.nutriments['energy-kcal_100g'] || 0),
-                            protein: p.nutriments.proteins_100g || 0,
-                            carbs: p.nutriments.carbohydrates_100g || 0,
-                            sugar: p.nutriments.sugars_100g || 0,
-                            fat: p.nutriments.fat_100g || 0,
-                            saturatedFat: p.nutriments['saturated-fat_100g'] || 0,
-                            unsaturatedFat: (p.nutriments.fat_100g || 0) - (p.nutriments['saturated-fat_100g'] || 0),
-                            unit: '100g',
-                            image: p.image_front_small_url
-                        };
-                        setApiResults([item]);
-                        setView('addFood');
-                    } else { alert("Produkt nicht gefunden."); }
-                } catch (e) { alert("Barcode Fehler."); }
-            };
+            useEffect(() => { localStorage.setItem('kTrackUser', JSON.stringify(user)); }, [user]);
+            useEffect(() => { localStorage.setItem('kTrackLog', JSON.stringify(dailyLog)); }, [dailyLog]);
+            useEffect(() => { localStorage.setItem('kTrackHistory', JSON.stringify(itemHistory)); }, [itemHistory]);
 
             const totals = useMemo(() => dailyLog.items.reduce((acc, i) => ({
                 kcal: acc.kcal + (Number(i.calories) || 0),
@@ -219,11 +133,26 @@
                 sf: acc.sf + (Number(i.saturatedFat) || 0)
             }), { kcal: 0, p: 0, c: 0, s: 0, f: 0, sf: 0 }), [dailyLog]);
 
+            const frequentItems = useMemo(() => {
+                const counts = {};
+                itemHistory.forEach(name => counts[name] = (counts[name] || 0) + 1);
+                // Hier würden wir eigentlich die ganzen Food-Objekte speichern, der Einfachheit halber filtern wir aus dem Log
+                const uniqueItems = [];
+                const seen = new Set();
+                [...dailyLog.items].reverse().forEach(item => {
+                    if(!seen.has(item.name)) {
+                        uniqueItems.push({...item, count: counts[item.name] || 1});
+                        seen.add(item.name);
+                    }
+                });
+                return uniqueItems.sort((a, b) => b.count - a.count).slice(0, 5);
+            }, [dailyLog, itemHistory]);
+
             const askGemini = async (text, img = null) => {
-                if (!user?.geminiApiKey) return alert("Key fehlt!");
+                if (!user.geminiApiKey) return alert("Hinterlege deinen Key im Profil!");
                 setIsThinking(true);
                 try {
-                    let prompt = `Analysiere das Gericht "${text || 'auf dem Bild'}". Schätze die Nährwerte für EINE normale Portion. Gib NUR valides JSON zurück: {"name":"Name","calories":0,"protein":0,"carbs":0,"sugar":0,"fat":0,"saturatedFat":0,"unsaturatedFat":0,"unit":"Portion"}`;
+                    let prompt = `Analysiere das Gericht "${text || 'auf dem Bild'}". Schätze die Nährwerte PRO 100g/ml. Gib NUR valides JSON: {"name":"Name","calories":0,"protein":0,"carbs":0,"sugar":0,"fat":0,"saturatedFat":0,"unit":"100g"}`;
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
 
@@ -235,238 +164,240 @@
                     const data = await res.json();
                     const json = JSON.parse(data.candidates[0].content.parts[0].text.match(/\{[\s\S]*\}/s)[0]);
                     setApiResults([{ ...json, id: Date.now(), isAi: true, image: img }]);
-                    setShowAiModal(false);
-                    setAiImage(null);
-                    setAiDesc('');
+                    setShowAiModal(false); setAiImage(null); setAiDesc('');
                 } catch (e) { alert("KI Fehler: " + e.message); }
                 finally { setIsThinking(false); }
             };
 
             const addEntry = (food) => {
-                const entry = { ...food, instanceId: Date.now() };
+                const factor = amount / 100;
+                const entry = { 
+                    ...food, 
+                    instanceId: Date.now(),
+                    calories: Math.round(food.calories * factor),
+                    protein: food.protein * factor,
+                    carbs: food.carbs * factor,
+                    sugar: food.sugar * factor,
+                    fat: food.fat * factor,
+                    saturatedFat: food.saturatedFat * factor,
+                    amountDisplay: `${amount}${unit}`
+                };
                 setDailyLog(prev => ({ ...prev, items: [...prev.items, entry] }));
+                setItemHistory(prev => [...prev, food.name]);
                 setView('dashboard');
-                setSearchQuery('');
-                setApiResults([]);
-                setSelectedFood(null);
+                setSearchQuery(''); setApiResults([]); setSelectedFood(null); setAmount(100);
             };
 
-            if (view === 'onboarding') {
-                return (
-                    <div className="p-10 pt-24 text-center max-w-md mx-auto h-screen">
-                        <div className="inline-block p-6 bg-brand-500/10 rounded-[2.5rem] mb-8 border border-brand-500/20"><Utensils size={48} className="text-brand-400"/></div>
-                        <h1 className="text-4xl font-black mb-4 tracking-tighter text-white">KaloTrack</h1>
-                        <p className="text-slate-500 font-bold mb-12 uppercase text-[10px] tracking-[0.2em]">Dein smarter Begleiter</p>
-                        <div className="space-y-4 max-w-xs mx-auto">
-                            <input type="number" placeholder="Ziel Kalorien (kcal)" onChange={e => {
-                                const val = Number(e.target.value);
-                                setUser({ target: val, targetP: 150, targetC: 250, targetF: 70, targetS: 50, geminiApiKey: '' });
-                            }} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 text-center font-bold text-white" />
-                            <button onClick={() => { if(user) setView('dashboard'); }} className="w-full bg-brand-600 py-5 rounded-2xl font-black uppercase tracking-widest mt-4 shadow-xl active:scale-95 transition-all text-white">Starten</button>
-                        </div>
-                    </div>
-                );
-            }
-
             return (
-                <div className="max-w-md mx-auto min-h-screen relative pb-36">
+                <div className="max-w-md mx-auto min-h-screen bg-slate-950 text-slate-100 p-6 pb-20">
                     
-                    {/* DETAILS MODAL */}
+                    {/* MODAL: DETAILS */}
                     {showDetails && (
-                        <div className="fixed inset-0 bg-slate-950/95 z-[130] flex items-center justify-center p-6 backdrop-blur-xl animate-in fade-in duration-200">
-                            <div className="w-full glass-card rounded-[3rem] p-8 space-y-6 shadow-2xl">
+                        <div className="fixed inset-0 bg-slate-950/95 z-[200] flex items-center justify-center p-6 backdrop-blur-xl animate-in fade-in duration-200">
+                            <div className="w-full glass-card rounded-[3rem] p-8 space-y-6">
                                 <div className="flex justify-between items-start">
                                     <h3 className="text-2xl font-black">{showDetails.name}</h3>
-                                    <button onClick={() => setShowDetails(null)} className="p-2 bg-slate-800 rounded-full active:scale-90 transition-all"><X size={20}/></button>
+                                    <button onClick={() => setShowDetails(null)} className="p-2 bg-slate-800 rounded-full"><XIcon size={20}/></button>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Energie</div><div className="text-lg font-black text-brand-400">{showDetails.calories} kcal</div></div>
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Protein</div><div className="text-lg font-black text-fuchsia-400">{showDetails.protein}g</div></div>
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Kohlenhydrate</div><div className="text-lg font-black text-blue-400">{showDetails.carbs}g</div><div className="text-xs text-blue-300/60 mt-1">davon {showDetails.sugar}g Zucker</div></div>
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Fett</div><div className="text-lg font-black text-amber-400">{showDetails.fat}g</div><div className="text-xs text-amber-300/60 mt-1">{showDetails.saturatedFat}g gesättigt</div></div>
+                                <div className="grid grid-cols-2 gap-4 text-center">
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Kalorien</div><div className="text-xl font-black text-brand-400">{Math.round(showDetails.calories)}</div></div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Protein</div><div className="text-xl font-black text-fuchsia-400">{Math.round(showDetails.protein)}g</div></div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2 text-left"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Kohlenhydrate</div><div className="text-xl font-black text-blue-400">{Math.round(showDetails.carbs)}g <span className="text-xs text-blue-300/40 ml-2">davon {Math.round(showDetails.sugar)}g Zucker</span></div></div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2 text-left"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Fett</div><div className="text-xl font-black text-amber-400">{Math.round(showDetails.fat)}g <span className="text-xs text-amber-300/40 ml-2">davon {Math.round(showDetails.saturatedFat)}g gesättigt</span></div></div>
                                 </div>
-                                <button onClick={() => setShowDetails(null)} className="w-full py-4 bg-brand-600 text-white rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-all">Schließen</button>
+                                <button onClick={() => setShowDetails(null)} className="w-full py-4 bg-brand-600 rounded-2xl font-black uppercase tracking-widest shadow-lg">Schließen</button>
                             </div>
                         </div>
                     )}
 
-                    {/* AI PHOTO MODAL */}
-                    {showAiModal && (
-                        <div className="fixed inset-0 bg-slate-950/95 z-[110] flex items-center justify-center p-6 backdrop-blur-xl">
-                            <div className="w-full glass-card rounded-[2.5rem] p-8 space-y-6">
-                                <h3 className="text-xl font-black flex items-center gap-3 text-white"><Camera className="text-brand-400"/> Foto-Details</h3>
-                                <img src={aiImage} className="w-full h-44 object-cover rounded-3xl border border-white/10 shadow-2xl" />
-                                <textarea placeholder="Zusätzliche Infos für die KI..." value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none text-sm h-28 font-medium text-white shadow-inner" />
-                                <div className="flex gap-3">
-                                    <button onClick={() => {setShowAiModal(false); setAiImage(null);}} className="flex-1 py-4 bg-slate-800 text-slate-300 rounded-2xl font-bold text-sm">Abbruch</button>
-                                    <button onClick={() => askGemini(aiDesc, aiImage)} disabled={isThinking} className="flex-1 py-4 bg-brand-500 text-slate-950 rounded-2xl font-black flex items-center justify-center gap-2 active:scale-95 transition-all">
-                                        {isThinking ? <Loader size={18}/> : "Analysieren"}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* MENGEN MODAL */}
+                    {/* MODAL: QUANTITY */}
                     {selectedFood && (
-                        <div className="fixed inset-0 bg-slate-950/90 z-[100] flex items-end backdrop-blur-sm p-4">
-                            <div className="w-full glass-card rounded-[3rem] p-8 animate-in slide-in-from-bottom shadow-2xl border-t border-white/10">
-                                <div className="flex justify-between items-center mb-10">
-                                    <h3 className="text-2xl font-black text-white">{selectedFood.name}</h3>
-                                    <button onClick={() => setSelectedFood(null)} className="p-2 bg-slate-800 rounded-full active:scale-90 transition-all"><X size={20}/></button>
+                        <div className="fixed inset-0 bg-slate-950/90 z-[150] flex items-end backdrop-blur-sm p-4 animate-in slide-in-from-bottom duration-300">
+                            <div className="w-full glass-card rounded-[3rem] p-8 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+                                <div className="flex justify-between items-center mb-8">
+                                    <h3 className="text-2xl font-black">{selectedFood.name}</h3>
+                                    <button onClick={() => setSelectedFood(null)} className="p-2 bg-slate-800 rounded-full"><XIcon size={20}/></button>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4 mb-10">
-                                    <div className="p-5 bg-slate-900 rounded-[1.5rem] border border-white/5 text-center shadow-inner"><div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Energie</div><div className="text-2xl font-black text-white">{selectedFood.calories} <span className="text-xs text-slate-600">kcal</span></div></div>
-                                    <div className="p-5 bg-slate-900 rounded-[1.5rem] border border-white/5 text-center shadow-inner"><div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Portion</div><div className="text-2xl font-black text-white">{selectedFood.unit}</div></div>
+                                <div className="space-y-6 mb-10">
+                                    <div className="flex items-center gap-4">
+                                        <input type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} className="flex-1 p-5 bg-slate-900 rounded-[1.5rem] text-3xl font-black text-center outline-none focus:ring-2 focus:ring-brand-500" />
+                                        <div className="flex flex-col gap-2">
+                                            <button onClick={() => setUnit('g')} className={`px-6 py-2 rounded-xl font-black transition-all ${unit==='g'?'bg-brand-500 text-white shadow-lg':'bg-slate-800 text-slate-500'}`}>g</button>
+                                            <button onClick={() => setUnit('ml')} className={`px-6 py-2 rounded-xl font-black transition-all ${unit==='ml'?'bg-brand-500 text-white shadow-lg':'bg-slate-800 text-slate-500'}`}>ml</button>
+                                        </div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="text-4xl font-black text-brand-400 tracking-tighter">{Math.round(selectedFood.calories * (amount/100))}</div>
+                                        <div className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mt-1">geschätzte Kalorien</div>
+                                    </div>
                                 </div>
-                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] active:scale-95 transition-all shadow-xl shadow-brand-500/20">Bestätigen</button>
+                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all">Hinzufügen</button>
                             </div>
                         </div>
                     )}
 
-                    {/* VIEW: DASHBOARD */}
+                    {/* DASHBOARD */}
                     {view === 'dashboard' && (
-                        <div className="p-6 animate-in fade-in duration-500">
-                            <div className="flex justify-between items-center mb-8 mt-6">
-                                <div>
-                                    <h2 className="text-3xl font-black tracking-tight text-white italic">KaloTrack</h2>
-                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mt-1">{new Date().toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long' })}</p>
-                                </div>
-                                <button onClick={() => setView('profile')} className="p-4 glass-card rounded-[1.5rem] border border-white/10 active:scale-90 transition-all shadow-lg"><UserIcon size={24} className="text-brand-400"/></button>
+                        <div className="animate-in fade-in duration-500">
+                            <div className="flex justify-between items-center mb-8 mt-4">
+                                <div><h1 className="text-3xl font-black tracking-tighter italic">KaloTrack</h1><p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mt-1">Heute, {new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })}</p></div>
+                                <button onClick={() => setView('profile')} className="p-4 glass-card rounded-[1.5rem] border border-white/10 active:scale-90 transition-all"><UserIcon size={24} className="text-brand-400"/></button>
                             </div>
 
-                            <div className="glass-card rounded-[3rem] p-8 mb-10 shadow-2xl border border-white/10 relative overflow-hidden">
+                            <div className="glass-card rounded-[3rem] p-8 mb-8 shadow-2xl relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-40 h-40 bg-brand-500/10 blur-3xl -z-10"></div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 items-center">
                                     <ProgressRing consumed={totals.kcal} target={user.target} />
                                     <div className="space-y-4">
-                                        <MacroBar label="Protein" value={totals.p} target={user.targetP} colorClass="bg-fuchsia-500 shadow-[0_0_10px_rgba(217,70,239,0.3)]" />
-                                        <MacroBar label="Kohlenhydrate" value={totals.c} target={user.targetC} colorClass="bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]" />
-                                        <MacroBar label="Fett" value={totals.f} target={user.targetF} colorClass="bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]" />
-                                        <MacroBar label="Zucker" value={totals.s} target={user.targetS} colorClass="bg-blue-300 shadow-[0_0_10px_rgba(147,197,253,0.3)]" />
+                                        <MacroBar label="Protein" value={totals.p} target={user.targetP} color="bg-fuchsia-500 shadow-[0_0_10px_rgba(217,70,239,0.3)]" />
+                                        <MacroBar label="Kohlenhydrate" value={totals.c} target={user.targetC} color="bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]" />
+                                        <MacroBar label="Zucker" value={totals.s} target={user.targetS} color="bg-blue-300" indent={true} />
+                                        <MacroBar label="Fett" value={totals.f} target={user.targetF} color="bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]" />
+                                        <MacroBar label="Gesättigt" value={totals.sf} target={20} color="bg-amber-700" indent={true} />
                                     </div>
                                 </div>
                             </div>
 
+                            <button onClick={() => setView('addFood')} className="w-full bg-brand-600 text-white py-6 rounded-[2.5rem] font-black uppercase tracking-widest shadow-2xl shadow-brand-500/20 active:scale-95 transition-all flex items-center justify-center gap-4 mb-12">
+                                <PlusIcon size={28} strokeWidth={4} /> Essen hinzufügen
+                            </button>
+
                             <div className="space-y-4">
-                                <div className="flex justify-between items-center px-4">
-                                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Mein Tag</h3>
-                                    <span className="text-[10px] font-black text-brand-400 uppercase">{dailyLog.items.length} Posten</span>
-                                </div>
-                                <div className="space-y-3">
-                                    {[...dailyLog.items].reverse().map(item => (
-                                        <div key={item.instanceId} className="glass-card p-4 rounded-[1.8rem] flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer shadow-lg" onClick={() => setShowDetails(item)}>
-                                            <div className="flex items-center gap-4">
-                                                {item.image ? <img src={item.image} className="w-14 h-14 rounded-2xl object-cover border border-white/10" /> : <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600 border border-white/5"><Utensils size={24}/></div>}
-                                                <div>
-                                                    <div className="font-bold text-white tracking-tight">{item.name}</div>
-                                                    <div className="text-[10px] font-black text-slate-500 uppercase mt-0.5">{item.calories} kcal <span className="opacity-30 mx-1">•</span> {item.protein}g Protein</div>
+                                <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-4">Tagebuch</h3>
+                                {dailyLog.items.length === 0 ? (
+                                    <div className="py-16 text-center opacity-30 italic text-sm">Noch keine Einträge</div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {[...dailyLog.items].reverse().map(item => (
+                                            <div key={item.instanceId} onClick={() => setShowDetails(item)} className="glass-card p-4 rounded-[1.8rem] flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer">
+                                                <div className="flex items-center gap-4">
+                                                    {item.image ? <img src={item.image} className="w-14 h-14 rounded-2xl object-cover border border-white/10" /> : <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600"><UtensilsIcon size={24}/></div>}
+                                                    <div><div className="font-bold text-white tracking-tight">{item.name}</div><div className="text-[10px] font-black text-slate-500 uppercase mt-0.5">{item.amountDisplay} <span className="mx-1">•</span> {Math.round(item.calories)} kcal</div></div>
                                                 </div>
+                                                <button onClick={(e) => { e.stopPropagation(); setDailyLog(prev => ({...prev, items: prev.items.filter(i => i.instanceId !== item.instanceId)})); }} className="p-3 text-slate-700 hover:text-rose-500 transition-all"><TrashIcon size={20}/></button>
                                             </div>
-                                            <button onClick={(e) => { e.stopPropagation(); setDailyLog(prev => ({...prev, items: prev.items.filter(i => i.instanceId !== item.instanceId)})); }} className="p-3 text-slate-700 hover:text-rose-500 active:scale-75 transition-all"><Trash2 size={20}/></button>
-                                        </div>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
 
-                    {/* VIEW: ADD FOOD */}
+                    {/* ADD VIEW */}
                     {view === 'addFood' && (
-                        <div className="p-6 animate-in slide-in-from-bottom duration-300">
+                        <div className="animate-in slide-in-from-bottom duration-300">
                             <div className="flex items-center gap-4 mb-10 mt-4">
-                                <button onClick={() => { setView('dashboard'); setApiResults([]); }} className="p-4 glass-card rounded-2xl active:scale-90 transition-all border border-white/5"><ArrowLeft size={24}/></button>
-                                <h2 className="text-3xl font-black tracking-tight text-white">Hinzufügen</h2>
+                                <button onClick={() => { setView('dashboard'); setApiResults([]); }} className="p-4 glass-card rounded-2xl"><ArrowLeftIcon size={24}/></button>
+                                <h2 className="text-3xl font-black tracking-tight">Hinzufügen</h2>
                             </div>
-                            
+
                             <div className="space-y-5 mb-10">
-                                <div className="relative group">
-                                    <input type="text" placeholder="Was hast du gegessen?..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full p-6 bg-slate-900 border border-white/10 rounded-3xl outline-none focus:ring-4 focus:ring-brand-500/20 text-white font-bold transition-all shadow-inner" />
-                                    <button onClick={startScanner} className="absolute right-3 top-1/2 -translate-y-1/2 p-4 bg-brand-600 rounded-2xl shadow-xl active:scale-90 transition-all border border-white/10"><ScanBarcode size={24} className="text-slate-950"/></button>
-                                </div>
-                                <div className="flex gap-4">
-                                    <button onClick={() => askGemini(searchQuery)} disabled={isThinking || searchQuery.length < 2} className="flex-1 bg-slate-900 hover:bg-slate-800 border border-white/10 text-white py-5 rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all disabled:opacity-30">
-                                        {isThinking ? <Loader size={16}/> : <Sparkles size={16} className="text-brand-400"/>} AI Text
+                                <div className="flex gap-3">
+                                    <input type="text" placeholder="Essen suchen..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="flex-1 p-5 bg-slate-900 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 text-white font-bold" />
+                                    <button onClick={() => setIsScanning(true)} className="p-4 bg-brand-600 rounded-2xl flex items-center gap-2 font-black text-xs uppercase tracking-widest shadow-lg">
+                                        <BarcodeIcon size={22}/> Barcode
                                     </button>
-                                    <button onClick={() => aiFileRef.current.click()} disabled={isThinking} className="flex-1 bg-brand-500 text-slate-950 py-5 rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl active:scale-95 transition-all">
-                                        {isThinking ? <Loader size={16}/> : <Camera size={16}/>} AI Foto
+                                </div>
+                                <div className="flex gap-3">
+                                    <button onClick={() => askGemini(searchQuery)} disabled={isThinking || searchQuery.length < 2} className="flex-1 bg-slate-900 border border-white/10 py-4 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 transition-all">
+                                        {isThinking ? <div className="spinner"><PlusIcon size={14}/></div> : <SparklesIcon size={14} className="text-brand-400"/>} AI Text
+                                    </button>
+                                    <button onClick={() => aiFileRef.current.click()} disabled={isThinking} className="flex-1 bg-brand-500 text-slate-950 py-4 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 shadow-lg">
+                                        <CameraIcon size={16}/> AI Foto
                                     </button>
                                 </div>
                                 <input type="file" accept="image/*" capture="environment" ref={aiFileRef} className="hidden" onChange={async e => {
                                     if(e.target.files[0]) {
                                         const base64 = await resizeImage(e.target.files[0]);
-                                        setAiImage(base64);
-                                        setShowAiModal(true);
+                                        setAiImage(base64); setShowAiModal(true);
                                     }
                                 }} />
                             </div>
 
+                            {/* FAVORITEN */}
+                            {!searchQuery && apiResults.length === 0 && (
+                                <div className="space-y-4">
+                                    <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-2">Häufig gegessen</h3>
+                                    <div className="space-y-3">
+                                        {frequentItems.map(item => (
+                                            <div key={item.name} onClick={() => setSelectedFood(item)} className="glass-card p-4 rounded-[1.5rem] flex justify-between items-center active:scale-98 cursor-pointer">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center text-brand-400"><UtensilsIcon size={18}/></div>
+                                                    <div><div className="font-bold text-sm text-white">{item.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{item.calories} kcal / 100g</div></div>
+                                                </div>
+                                                <PlusIcon size={20} className="text-brand-400"/>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* RESULTS */}
                             <div className="space-y-4">
                                 {apiResults.map(f => (
-                                    <div key={f.id || 'res'} onClick={() => setSelectedFood(f)} className="glass-card p-6 rounded-[2.5rem] flex justify-between items-center animate-in zoom-in border-brand-500/20 active:scale-98 transition-all cursor-pointer shadow-xl">
-                                        <div className="flex items-center gap-6">
-                                            {f.image ? <img src={f.image} className="w-16 h-16 rounded-2xl object-cover border border-white/10 shadow-lg" /> : <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600 border border-white/5 shadow-inner"><Utensils size={28}/></div>}
-                                            <div>
-                                                <div className="font-bold text-xl text-white tracking-tight">{f.name}</div>
-                                                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">{f.calories} kcal <span className="mx-2 opacity-20">|</span> {f.unit}</div>
-                                            </div>
+                                    <div key={f.id || 'res'} onClick={() => setSelectedFood(f)} className="glass-card p-6 rounded-[2.5rem] flex justify-between items-center border-brand-500/20 shadow-xl cursor-pointer active:scale-98">
+                                        <div className="flex items-center gap-5">
+                                            {f.image ? <img src={f.image} className="w-16 h-16 rounded-2xl object-cover" /> : <UtensilsIcon size={28} className="text-slate-600" />}
+                                            <div><div className="font-bold text-xl text-white tracking-tight">{f.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{f.calories} kcal / {f.unit}</div></div>
                                         </div>
-                                        <div className="bg-brand-500 text-slate-950 p-3 rounded-2xl shadow-lg"><Plus size={24} strokeWidth={4}/></div>
+                                        <div className="bg-brand-500 text-slate-950 p-3 rounded-2xl"><PlusIcon size={24} strokeWidth={4}/></div>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     )}
 
-                    {view === 'profile' && (
-                        <div className="p-6 animate-in slide-in-from-right duration-300">
-                            <div className="flex items-center gap-4 mb-10 mt-4">
-                                <button onClick={() => setView('dashboard')} className="p-4 glass-card rounded-2xl active:scale-90 transition-all border border-white/5"><ArrowLeft size={24}/></button>
-                                <h2 className="text-3xl font-black tracking-tight text-white">Meine Ziele</h2>
-                            </div>
-                            <div className="glass-card p-8 rounded-[3rem] space-y-8 shadow-2xl border border-white/10">
-                                <div className="space-y-6">
-                                    <GoalInput label="Energie (kcal)" value={user.target} unit="kcal" color="text-brand-400" onChange={v => setUser({...user, target: v})} />
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <GoalInput label="Protein" value={user.targetP} unit="g" color="text-fuchsia-400" onChange={v => setUser({...user, targetP: v})} />
-                                        <GoalInput label="Kohlenhydrate" value={user.targetC} unit="g" color="text-blue-400" onChange={v => setUser({...user, targetC: v})} />
-                                        <GoalInput label="Fett" value={user.targetF} unit="g" color="text-amber-400" onChange={v => setUser({...user, targetF: v})} />
-                                        <GoalInput label="Zucker" value={user.targetS} unit="g" color="text-blue-300" onChange={v => setUser({...user, targetS: v})} />
-                                    </div>
-                                </div>
-                                <div className="pt-8 border-t border-white/5 space-y-6">
-                                    <div>
-                                        <label className="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest block mb-2 px-1">Gemini API Key</label>
-                                        <input type="password" value={user.geminiApiKey} onChange={e => setUser({...user, geminiApiKey: e.target.value})} className="w-full p-4 bg-slate-800 rounded-2xl font-mono text-[10px] shadow-inner outline-none border border-white/5 text-white" />
-                                    </div>
-                                    <button onClick={() => { if(confirm("Wirklich alles zurücksetzen?")) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-rose-500/5 border border-rose-500/20 text-rose-500 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:bg-rose-500/10 transition-all"><Trash2 size={16}/> App Zurücksetzen</button>
+                    {/* AI PHOTO MODAL */}
+                    {showAiModal && (
+                        <div className="fixed inset-0 bg-slate-950/95 z-[250] flex items-center justify-center p-6 backdrop-blur-xl">
+                            <div className="w-full glass-card rounded-[2.5rem] p-8 space-y-6">
+                                <h3 className="text-xl font-black flex items-center gap-3"><CameraIcon className="text-brand-400"/> Foto-Details</h3>
+                                <img src={aiImage} className="w-full h-44 object-cover rounded-3xl border border-white/10" />
+                                <textarea placeholder="Zusätzliche Infos für die KI..." value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none text-sm h-28 font-medium text-white shadow-inner" />
+                                <div className="flex gap-3">
+                                    <button onClick={() => {setShowAiModal(false); setAiImage(null);}} className="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">Abbruch</button>
+                                    <button onClick={() => askGemini(aiDesc, aiImage)} disabled={isThinking} className="flex-1 py-4 bg-brand-500 text-slate-950 rounded-2xl font-black flex items-center justify-center gap-2">
+                                        {isThinking ? "..." : "Senden"}
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* NAV */}
-                    <div className="fixed bottom-10 left-0 right-0 px-10 pointer-events-none z-[80]">
-                        <div className="max-w-xs mx-auto h-22 glass-card rounded-[2.5rem] flex items-center justify-around pointer-events-auto shadow-[0_20px_60px_rgba(0,0,0,0.7)] border-t border-white/10 p-2">
-                            <button onClick={() => { setView('dashboard'); setApiResults([]); }} className={`p-4 rounded-2xl transition-all ${view==='dashboard'?'text-brand-400 bg-brand-500/10 shadow-inner':'text-slate-600'}`}><Home size={30}/></button>
-                            <button onClick={() => setView('addFood')} className="bg-brand-500 text-slate-950 p-5 rounded-3xl -top-12 relative border-[8px] border-slate-950 shadow-2xl active:scale-90 transition-all"><Plus size={36} strokeWidth={4}/></button>
-                            <button onClick={() => setView('profile')} className={`p-4 rounded-2xl transition-all ${view==='profile'?'text-brand-400 bg-brand-500/10 shadow-inner':'text-slate-600'}`}><UserIcon size={30}/></button>
+                    {/* PROFILE VIEW */}
+                    {view === 'profile' && (
+                        <div className="animate-in slide-in-from-right duration-300">
+                            <div className="flex items-center gap-4 mb-10 mt-4">
+                                <button onClick={() => setView('dashboard')} className="p-4 glass-card rounded-2xl"><ArrowLeftIcon size={24}/></button>
+                                <h2 className="text-3xl font-black tracking-tight text-white">Ziele</h2>
+                            </div>
+                            <div className="glass-card p-8 rounded-[3rem] space-y-6 shadow-2xl border border-white/10 overflow-y-auto max-h-[70vh]">
+                                <GoalItem label="Energie" value={user.target} unit="kcal" color="text-brand-400" onChange={v => setUser({...user, target: v})} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <GoalItem label="Protein" value={user.targetP} unit="g" color="text-fuchsia-400" onChange={v => setUser({...user, targetP: v})} />
+                                    <GoalItem label="Kohlenhydrate" value={user.targetC} unit="g" color="text-blue-400" onChange={v => setUser({...user, targetC: v})} />
+                                    <GoalItem label="Fett" value={user.targetF} unit="g" color="text-amber-400" onChange={v => setUser({...user, targetF: v})} />
+                                    <GoalItem label="Zucker" value={user.targetS} unit="g" color="text-blue-300" onChange={v => setUser({...user, targetS: v})} />
+                                </div>
+                                <div className="pt-8 border-t border-white/5">
+                                    <label className="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest block mb-2 px-1">Gemini API Key</label>
+                                    <input type="password" value={user.geminiApiKey} onChange={e => setUser({...user, geminiApiKey: e.target.value})} className="w-full p-4 bg-slate-800 rounded-2xl font-mono text-xs border border-white/5 text-white" />
+                                </div>
+                                <button onClick={() => { if(confirm("App zurücksetzen?")) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-rose-500/10 border border-rose-500/20 text-rose-500 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest mt-4">Reset</button>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
-                    {/* SCANNER MODAL */}
+                    {/* BARCODE SCANNER MODAL */}
                     {isScanning && (
-                        <div className="fixed inset-0 bg-slate-950 z-[140] flex flex-col items-center justify-center p-6 backdrop-blur-3xl animate-in zoom-in duration-300">
+                        <div className="fixed inset-0 bg-slate-950 z-[300] flex flex-col items-center justify-center p-6 backdrop-blur-3xl animate-in zoom-in duration-300">
                             <div className="w-full max-w-md glass-card rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl">
                                 <div className="flex justify-between items-center p-8 bg-slate-900/50">
-                                    <h3 className="font-black text-xl text-white tracking-tight flex items-center gap-3"><ScanBarcode size={24} className="text-brand-400"/> Scan</h3>
-                                    <button onClick={stopScanner} className="p-2 bg-slate-800 rounded-full active:scale-90 transition-all"><X size={20}/></button>
+                                    <h3 className="font-black text-xl text-white flex items-center gap-3"><BarcodeIcon size={24} className="text-brand-400"/> Scan</h3>
+                                    <button onClick={() => setIsScanning(false)} className="p-2 bg-slate-800 rounded-full"><XIcon size={20}/></button>
                                 </div>
                                 <div className="p-6">
-                                    <div id="qr-reader" className="w-full aspect-square bg-black rounded-3xl shadow-inner overflow-hidden border-4 border-slate-900"></div>
-                                </div>
-                                <div className="p-8 text-center bg-slate-900/50">
-                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Barcode im Rahmen positionieren</p>
+                                    <div id="qr-reader" className="w-full aspect-square bg-black rounded-3xl overflow-hidden border-4 border-slate-900"></div>
                                 </div>
                             </div>
                         </div>
@@ -475,16 +406,11 @@
             );
         }
 
-        const GoalInput = ({ label, value, unit, color="text-white", onChange }) => (
+        const GoalItem = ({ label, value, unit, color, onChange }) => (
             <div className="space-y-2">
                 <label className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] block px-1">{label}</label>
-                <div className="relative group">
-                    <input 
-                        type="number" 
-                        value={value || 0} 
-                        onChange={e => onChange(Number(e.target.value))} 
-                        className={`w-full p-5 bg-slate-900/50 border border-white/5 rounded-2xl font-black text-xl outline-none focus:ring-2 focus:ring-brand-500/50 shadow-inner transition-all ${color}`} 
-                    />
+                <div className="relative">
+                    <input type="number" value={value} onChange={e => onChange(Number(e.target.value))} className={`w-full p-5 bg-slate-900 border border-white/5 rounded-2xl font-black text-xl outline-none focus:ring-2 focus:ring-brand-500/50 ${color}`} />
                     <span className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-600 font-bold uppercase text-[9px]">{unit}</span>
                 </div>
             </div>
