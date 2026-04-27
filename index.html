@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kalorien-Zähler – Pro</title>
+    <title>Kalorien-Zähler – Ultimate</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,8 +40,8 @@
     <style>
         body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; background-color: #070b14; color: #f8fafc; font-family: 'Inter', sans-serif; }
         .glass-card { background: rgba(21, 30, 45, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #qr-reader { border: none !important; width: 100% !important; background: black !important; }
         #qr-reader video { border-radius: 1.5rem; object-fit: cover !important; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -102,8 +102,8 @@
             return (
                 <div className="relative flex items-center justify-center">
                     <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
-                        <circle stroke="#1e293b" strokeWidth="12" fill="transparent" r={normRadius} cx={radius} cy={radius} />
-                        <circle stroke="#8b5cf6" strokeWidth="12" strokeDasharray={circ} style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s' }} strokeLinecap="round" fill="transparent" r={normRadius} cx={radius} cy={radius} />
+                        <circle stroke="#1e293b" strokeWidth={12} fill="transparent" r={normRadius} cx={radius} cy={radius} />
+                        <circle stroke="#8b5cf6" strokeWidth={12} strokeDasharray={circ} style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s' }} strokeLinecap="round" fill="transparent" r={normRadius} cx={radius} cy={radius} />
                     </svg>
                     <div className="absolute text-center">
                         <div className="text-3xl font-black text-white tracking-tighter">{Math.max(0, Math.round(target - consumed))}</div>
@@ -119,7 +119,7 @@
                 <div className="space-y-1.5">
                     <div className="flex justify-between items-end px-1">
                         <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">{label}</span>
-                        <span className="text-[10px] font-bold text-slate-400">{Math.round(value)}g <span className="opacity-30">/ {target}g</span></span>
+                        <span className="text-[10px] font-bold text-white">{Math.round(value)}g <span className="opacity-30 text-slate-400">/ {target}g</span></span>
                     </div>
                     <div className="h-1.5 w-full bg-slate-800/50 rounded-full overflow-hidden">
                         <div className={`h-full ${color} rounded-full transition-all duration-1000`} style={{ width: `${percent}%` }}></div>
@@ -128,10 +128,10 @@
             );
         };
 
-        const SubMacroRow = ({ label, value, color }) => (
+        const SubMacroRow = ({ label, value }) => (
             <div className="flex justify-between items-center px-1">
                 <span className="text-[8px] font-black uppercase tracking-wider text-slate-600">{label}</span>
-                <span className={`text-[10px] font-bold ${color}`}>{Math.round(value)}g</span>
+                <span className="text-[10px] font-bold text-white">{Math.round(value)}g</span>
             </div>
         );
 
@@ -246,7 +246,7 @@
                 if (!user.geminiApiKey) return alert("Hinterlege deinen Key im Profil!");
                 setIsThinking(true);
                 try {
-                    let prompt = `Analysiere das Gericht "${text || 'auf dem Bild'}". Schätze die Nährwerte PRO 100g oder 100ml. Gib NUR valides JSON zurück: {"name":"Name","calories":0,"protein":0,"carbs":0,"sugar":0,"fat":0,"saturatedFat":0,"unsaturatedFat":0,"unit":"100g"}`;
+                    let prompt = `Analysiere das Gericht "${text || 'auf dem Bild'}". Schätze die Nährwerte PRO 100g oder 100ml. Gib NUR valides JSON zurück: {"name":"Name","calories":0,"protein":0,"carbs":0,"sugar":0,"fat":0,"saturatedFat":0,"unit":"100g"}`;
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
 
@@ -322,7 +322,7 @@
                     {/* SUCCESS OVERLAY */}
                     {showSuccess && (
                         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[300] bg-brand-500 text-slate-950 px-8 py-4 rounded-full font-black flex items-center gap-3 shadow-2xl animate-success-fade">
-                            <CheckIcon size={24} /> Erledigt!
+                            <CheckIcon size={24} /> Eintragen erfolgreich!
                         </div>
                     )}
 
@@ -342,7 +342,7 @@
                                 </div>
                                 <div className="flex gap-3">
                                     <button onClick={() => setShowDetails(null)} className="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">Schließen</button>
-                                    <button onClick={() => openEdit(showDetails)} className="flex-[2] py-4 bg-brand-600 rounded-2xl font-black uppercase tracking-widest shadow-lg">Menge anpassen</button>
+                                    <button onClick={() => openEdit(showDetails)} className="flex-[2] py-4 bg-brand-600 rounded-2xl font-black shadow-lg active:opacity-80">Menge anpassen</button>
                                 </div>
                             </div>
                         </div>
@@ -354,16 +354,16 @@
                             <div className="w-full glass-card rounded-[3rem] p-8 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
                                 <div className="flex justify-between items-center mb-8">
                                     <h3 className="text-2xl font-black">{selectedFood.name}</h3>
-                                    <button onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}} className="p-2 bg-slate-800 rounded-full active:scale-90 transition-all"><XIcon size={20}/></button>
+                                    <button onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}} className="p-2 bg-slate-800 rounded-full active:opacity-80 transition-all"><XIcon size={20}/></button>
                                 </div>
                                 <div className="space-y-6 mb-10">
                                     <div className="flex items-center gap-4">
-                                        <button onClick={() => setAmount(Math.max(0, (amount||0) - 50))} className="p-5 bg-slate-800 rounded-2xl active:scale-90 transition-all"><MinusIcon size={20}/></button>
+                                        <button onClick={() => setAmount(Math.max(0, (amount||0) - 50))} className="p-5 bg-slate-800 rounded-2xl active:opacity-80 transition-all"><MinusIcon size={20}/></button>
                                         <div className="flex-1 relative">
                                             <input type="number" value={amount} onFocus={(e) => e.target.select()} onChange={e => setAmount(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-5 bg-slate-900 rounded-[1.5rem] text-3xl font-black text-center outline-none focus:ring-2 focus:ring-brand-500 text-white" />
                                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 font-black">{unit}</span>
                                         </div>
-                                        <button onClick={() => setAmount((amount||0) + 50)} className="p-5 bg-brand-500 text-slate-950 rounded-2xl active:scale-90 transition-all"><PlusIcon size={20}/></button>
+                                        <button onClick={() => setAmount((amount||0) + 50)} className="p-5 bg-brand-500 text-slate-950 rounded-2xl active:opacity-80 transition-all"><PlusIcon size={20}/></button>
                                     </div>
                                     <div className="flex gap-2 justify-center">
                                         <button onClick={() => setUnit('g')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='g'?'bg-white/10 text-brand-400':'text-slate-600'}`}>GRAMM</button>
@@ -374,7 +374,7 @@
                                         <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest mt-1">Kalorien für {amount || 0}{unit}</div>
                                     </div>
                                 </div>
-                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all">
+                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black shadow-xl active:opacity-80 transition-opacity">
                                     {editingInstanceId ? 'Aktualisieren' : 'Hinzufügen'}
                                 </button>
                             </div>
@@ -385,7 +385,7 @@
                     {view === 'dashboard' && (
                         <div className="animate-in fade-in duration-500">
                             <div className="flex justify-between items-center mb-8 mt-4">
-                                <div><h1 className="text-2xl font-black tracking-tighter italic">Kalorien-Zähler</h1><p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mt-1">Heute, {new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })}</p></div>
+                                <div><h1 className="text-2xl font-black tracking-tighter italic text-white">Kalorien-Zähler</h1><p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mt-1">Heute, {new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })}</p></div>
                                 <button onClick={() => setView('profile')} className="p-4 glass-card rounded-[1.5rem] border border-white/10 active:scale-90 transition-all shadow-lg"><UserIcon size={24} className="text-brand-400"/></button>
                             </div>
 
@@ -438,7 +438,7 @@
                         <div className="animate-in slide-in-from-bottom duration-300 p-2">
                             <div className="flex items-center gap-4 mb-10 mt-4">
                                 <button onClick={() => { setView('dashboard'); setApiResults([]); }} className="p-4 glass-card rounded-2xl"><ArrowLeftIcon size={24}/></button>
-                                <h2 className="text-3xl font-black tracking-tight">Tracken</h2>
+                                <h2 className="text-3xl font-black tracking-tight text-white">Tracken</h2>
                             </div>
 
                             <div className="space-y-5 mb-10">
@@ -464,6 +464,7 @@
                                 }} />
                             </div>
 
+                            {/* FAVS */}
                             {!searchQuery && apiResults.length === 0 && (
                                 <div className="space-y-4">
                                     <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-2">Häufig gegessen</h3>
@@ -472,7 +473,7 @@
                                             <div key={item.name} onClick={() => setSelectedFood(item)} className="glass-card p-4 rounded-[1.5rem] flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer">
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center text-brand-400"><UtensilsIcon size={18}/></div>
-                                                    <div><div className="font-bold text-sm text-white">{item.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{Math.round(item.calories)} kcal / 100g</div></div>
+                                                    <div><div className="font-bold text-sm text-white">{item.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{Math.round(item.baseCalories)} kcal / 100g</div></div>
                                                 </div>
                                                 <PlusIcon size={16} className="text-brand-400"/>
                                             </div>
@@ -481,6 +482,7 @@
                                 </div>
                             )}
 
+                            {/* SEARCH RESULTS */}
                             <div className="space-y-3 mt-4">
                                 {apiResults.map(f => (
                                     <div key={f.id || 'res'} onClick={() => setSelectedFood(f)} className="glass-card p-4 rounded-[2rem] flex justify-between items-center animate-in zoom-in cursor-pointer active:scale-98">
@@ -499,12 +501,12 @@
                     {showAiModal && (
                         <div className="fixed inset-0 bg-slate-950/95 z-[250] flex items-center justify-center p-6 backdrop-blur-xl">
                             <div className="w-full glass-card rounded-[2.5rem] p-8 space-y-6 animate-in zoom-in duration-200">
-                                <h3 className="text-xl font-black flex items-center gap-3"><CameraIcon className="text-brand-400"/> Foto-Details</h3>
+                                <h3 className="text-xl font-black flex items-center gap-3"><CameraIcon className="text-brand-400"/> Foto-Info</h3>
                                 <img src={aiImage} className="w-full h-44 object-cover rounded-3xl border border-white/10 shadow-2xl" />
-                                <textarea placeholder="Was genau ist zu sehen? (z.B. große Portion, extra Beilage...)" value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none text-sm h-28 font-medium text-white shadow-inner" />
+                                <textarea placeholder="Was genau ist zu sehen?..." value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none text-sm h-28 font-medium text-white shadow-inner" />
                                 <div className="flex gap-3">
                                     <button onClick={() => {setShowAiModal(false); setAiImage(null);}} className="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">Abbruch</button>
-                                    <button onClick={() => askGemini(aiDesc, aiImage)} disabled={isThinking} className="flex-1 py-4 bg-brand-500 text-slate-950 rounded-2xl font-black flex items-center justify-center gap-2 active:scale-95">
+                                    <button onClick={() => askGemini(aiDesc, aiImage)} disabled={isThinking} className="flex-1 py-4 bg-brand-500 text-slate-950 rounded-2xl font-black flex items-center justify-center gap-2 active:scale-95 transition-all">
                                         {isThinking ? <LoaderIcon size={18}/> : "Absenden"}
                                     </button>
                                 </div>
@@ -529,14 +531,14 @@
                                 </div>
                                 <div className="pt-8 border-t border-white/5 space-y-2">
                                     <label className="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest block mb-2 px-1">Gemini API Key</label>
-                                    <input type="password" value={user.geminiApiKey} onChange={e => setUser({...user, geminiApiKey: e.target.value})} className="w-full p-4 bg-slate-800 rounded-2xl font-mono text-xs border border-white/5 text-white" />
+                                    <input type="password" value={user.geminiApiKey} onChange={e => setUser({...user, geminiApiKey: e.target.value})} className="w-full p-4 bg-slate-800 rounded-2xl font-mono text-xs border border-white/5 text-white shadow-inner" />
                                 </div>
-                                <button onClick={() => { if(confirm("App zurücksetzen?")) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-rose-500/5 border border-rose-500/20 text-rose-500 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest mt-4">Reset</button>
+                                <button onClick={() => { if(confirm("App zurücksetzen?")) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-rose-500/5 border border-rose-500/20 text-rose-500 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest mt-4 active:bg-rose-500/10 transition-all">Reset</button>
                             </div>
                         </div>
                     )}
 
-                    {/* BARCODE MODAL */}
+                    {/* SCANNER MODAL */}
                     {isScanning && (
                         <div className="fixed inset-0 bg-slate-950 z-[300] flex flex-col items-center justify-center p-6 backdrop-blur-3xl animate-in zoom-in duration-300">
                             <div className="w-full max-w-md glass-card rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl">
