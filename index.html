@@ -361,17 +361,17 @@
 
                     {/* MODAL: QUANTITY & STEPPER & LIVE NUTRITION */}
                     {selectedFood && (
-                        <div className="fixed inset-0 bg-slate-950/90 z-[200] flex items-end backdrop-blur-sm p-4 animate-in slide-up duration-300">
+                        <div className="fixed inset-0 bg-slate-950/90 z-[450] flex items-end p-4 backdrop-blur-sm animate-in slide-up duration-300 pointer-events-none">
                             <div className="w-full glass-card rounded-[3rem] p-8 shadow-[0_-20px_50px_rgba(0,0,0,0.5)] border-t border-white/10 overscroll-contain pointer-events-auto">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-2xl font-black text-white">{selectedFood.name}</h3>
-                                    <button onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}} className="p-2 bg-slate-800 rounded-full active:opacity-80 transition-all"><XIcon size={20}/></button>
+                                    <button type="button" onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}} className="p-2 bg-slate-800 rounded-full active:opacity-80 transition-all"><XIcon size={20}/></button>
                                 </div>
                                 
                                 <div className="space-y-6 mb-8">
                                     {/* MENGENAUSWAHL */}
                                     <div className="flex items-center gap-4">
-                                        <button onClick={() => setAmount(Math.max(0, (amount||0) - 50))} className="p-5 bg-slate-800 rounded-2xl active:opacity-80 transition-all touch-manipulation"><MinusIcon size={20}/></button>
+                                        <button type="button" onClick={() => setAmount(Math.max(0, (amount||0) - 50))} className="p-5 bg-slate-800 rounded-2xl active:opacity-80 transition-all touch-manipulation"><MinusIcon size={20}/></button>
                                         <div className="flex-1 relative">
                                             <input 
                                                 type="number" 
@@ -383,11 +383,11 @@
                                             />
                                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 font-black pointer-events-none">{unit}</span>
                                         </div>
-                                        <button onClick={() => setAmount((amount||0) + 50)} className="p-5 bg-brand-500 text-slate-950 rounded-2xl active:opacity-80 transition-all touch-manipulation"><PlusIcon size={20}/></button>
+                                        <button type="button" onClick={() => setAmount((amount||0) + 50)} className="p-5 bg-brand-500 text-slate-950 rounded-2xl active:opacity-80 transition-all touch-manipulation"><PlusIcon size={20}/></button>
                                     </div>
                                     <div className="flex gap-2 justify-center">
-                                        <button onClick={() => setUnit('g')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='g'?'bg-white/10 text-brand-400 border border-brand-500/20':'text-slate-600'}`}>GRAMM</button>
-                                        <button onClick={() => setUnit('ml')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='ml'?'bg-white/10 text-brand-400 border border-brand-500/20':'text-slate-600'}`}>ML</button>
+                                        <button type="button" onClick={() => setUnit('g')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='g'?'bg-white/10 text-brand-400 border border-brand-500/20':'text-slate-600'}`}>GRAMM</button>
+                                        <button type="button" onClick={() => setUnit('ml')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='ml'?'bg-white/10 text-brand-400 border border-brand-500/20':'text-slate-600'}`}>ML</button>
                                     </div>
 
                                     {/* LIVE NÄHRWERTE */}
@@ -411,7 +411,9 @@
                                     </div>
                                 </div>
                                 
-                                <button onClick={() => addEntry(selectedFood)} className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl active:opacity-80 transition-opacity touch-manipulation">
+                                <button type="button" 
+                                    onPointerDown={() => addEntry(selectedFood)} 
+                                    className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl active:opacity-80 transition-opacity touch-manipulation">
                                     {editingInstanceId ? 'Aktualisieren' : 'Bestätigen'}
                                 </button>
                             </div>
