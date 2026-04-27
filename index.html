@@ -174,61 +174,73 @@
 
             const searchTimeout = useRef(null);
 
+            const [searchProgress, setSearchProgress] = useState(0);
+
             // REAL-TIME SEARCH LOGIC
-            const triggerSearch = async (signal, retryCount = 0) => {
+            const triggerSearch = async (signal, startTime = Date.now()) => {
                 if (searchQuery.length < 2) return;
-                if (searchTimeout.current && retryCount === 0) clearTimeout(searchTimeout.current);
                 
                 setIsSearching(true);
-                try {
-                    const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchQuery)}&search_simple=1&action=process&json=1&page_size=40&lc=de`, { signal });
-                    
-                    if (!res.ok && retryCount < 3) {
-                        throw new Error("Server Busy");
-                    }
+                setSearchProgress(0);
 
-                    const data = await res.json();
-                    
-                    // Falls die Datenbank leer antwortet (häufig bei Überlastung), versuchen wir es automatisch noch einmal
-                    if ((!data || !data.products || data.products.length === 0) && retryCount < 2) {
-                        setTimeout(() => triggerSearch(signal, retryCount + 1), 500);
-                        return;
-                    }
+                // Fortschrittsbalken Animation
+                const progressInterval = setInterval(() => {
+                    const elapsed = Date.now() - startTime;
+                    const p = Math.min(100, (elapsed / 10000) * 100);
+                    setSearchProgress(p);
+                    if (p >= 100) clearInterval(progressInterval);
+                }, 100);
 
-                    if (data && data.products) {
-                        const formatted = data.products
-                            .map(p => {
-                                const n = p.nutriments || {};
-                                return {
-                                    id: p._id || p.code || Math.random(),
-                                    name: p.product_name_de || p.product_name || p.generic_name_de || p.brands || "Unbekanntes Produkt",
-                                    calories: Math.round(n['energy-kcal_100g'] || n['energy-kcal'] || 0),
-                                    protein: n.proteins_100g || n.proteins || 0,
-                                    carbs: n.carbohydrates_100g || n.carbohydrates || 0,
-                                    sugar: n.sugars_100g || n.sugars || 0,
-                                    fat: n.fat_100g || n.fat || 0,
-                                    saturatedFat: n['saturated-fat_100g'] || n['saturated-fat'] || 0,
-                                    unsaturatedFat: (n.fat_100g || 0) - (n['saturated-fat_100g'] || 0),
-                                    unit: '100g',
-                                    image: p.image_front_small_url || p.image_small_url
-                                };
-                            })
-                            .filter(p => p.name !== "Unbekanntes Produkt");
-                        setApiResults(formatted);
-                    }
-                } catch (e) { 
-                    if (e.name !== 'AbortError') {
-                        if (retryCount < 3) {
-                            setTimeout(() => triggerSearch(signal, retryCount + 1), 500);
-                        } else {
-                            console.error("Suche endgültig fehlgeschlagen", e);
+                const performFetch = async () => {
+                    try {
+                        const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchQuery)}&search_simple=1&action=process&json=1&page_size=50&lc=de`, { signal });
+                        const data = await res.json();
+                        
+                        if (data && data.products && data.products.length > 0) {
+                            clearInterval(progressInterval);
+                            setSearchProgress(100);
+                            const formatted = data.products
+                                .map(p => {
+                                    const n = p.nutriments || {};
+                                    return {
+                                        id: p._id || p.code || Math.random(),
+                                        name: p.product_name_de || p.product_name || p.generic_name_de || p.brands || "Unbekanntes Produkt",
+                                        calories: Math.round(n['energy-kcal_100g'] || n['energy-kcal'] || 0),
+                                        protein: n.proteins_100g || n.proteins || 0,
+                                        carbs: n.carbohydrates_100g || n.carbohydrates || 0,
+                                        sugar: n.sugars_100g || n.sugars || 0,
+                                        fat: n.fat_100g || n.fat || 0,
+                                        saturatedFat: n['saturated-fat_100g'] || n['saturated-fat'] || 0,
+                                        unsaturatedFat: (n.fat_100g || 0) - (n['saturated-fat_100g'] || 0),
+                                        unit: '100g',
+                                        image: p.image_front_small_url || p.image_small_url
+                                    };
+                                })
+                                .filter(p => p.name !== "Unbekanntes Produkt");
+                            setApiResults(formatted);
+                            setIsSearching(false);
+                            return true;
                         }
+                    } catch (e) {
+                        if (e.name === 'AbortError') return true;
                     }
-                } finally {
-                    if (retryCount >= 2 || (apiResults.length > 0)) {
-                        setIsSearching(false);
-                    }
+                    return false;
+                };
+
+                // Versuche es über 10 Sekunden hinweg immer wieder
+                for (let i = 0; i < 5; i++) {
+                    const found = await performFetch();
+                    if (found) break;
+                    
+                    const elapsed = Date.now() - startTime;
+                    if (elapsed >= 10000) break;
+                    
+                    // Warte 2 Sekunden vor dem nächsten Versuch
+                    await new Promise(r => setTimeout(r, 2000));
                 }
+
+                clearInterval(progressInterval);
+                setIsSearching(false);
             };
 
             useEffect(() => {
@@ -635,7 +647,14 @@
 
                             {/* SEARCH RESULTS */}
                             <div className="space-y-3 mt-4">
-                                {isSearching && <div className="text-center py-4 animate-pulse text-brand-400 font-black text-xs uppercase tracking-widest">Suche läuft...</div>}
+                                {isSearching && (
+                                    <div className="space-y-2 py-4">
+                                        <div className="text-center animate-pulse text-brand-400 font-black text-xs uppercase tracking-widest">Tiefensuche läuft...</div>
+                                        <div className="h-1 w-full bg-slate-900 rounded-full overflow-hidden">
+                                            <div className="h-full bg-brand-500 transition-all duration-300" style={{ width: `${searchProgress}%` }}></div>
+                                        </div>
+                                    </div>
+                                )}
                                 {!isSearching && searchQuery.length >= 2 && apiResults.length === 0 && (
                                     <div className="text-center py-10 space-y-4">
                                         <div className="opacity-30 italic text-sm">Keine Produkte gefunden</div>
