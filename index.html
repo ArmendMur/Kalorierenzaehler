@@ -66,29 +66,8 @@
         const SparklesIcon = (p) => <Icon d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" {...p} />;
         const BarcodeIcon = (p) => <Icon d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" {...p} />;
         const TrashIcon = (p) => <Icon d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" {...p} />;
+        const ArrowLeftIcon = (p) => <Icon d="m12 19-7-7 7-7M19 12H5" {...p} />;
         const CheckIcon = (p) => <Icon d="m20 6-11 11-5-5" {...p} />;
-
-        // --- HELPERS ---
-        const resizeImage = (file) => {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800;
-                        const scale = MAX_WIDTH / img.width;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scale;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.6));
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        };
 
         // --- COMPONENTS ---
         const ProgressRing = ({ consumed, target }) => {
@@ -111,12 +90,12 @@
             );
         };
 
-        const MacroBar = ({ label, value, target, color, indent = false }) => {
+        const MacroBar = ({ label, value, target, color }) => {
             const percent = Math.min(100, (value / (target || 1)) * 100) || 0;
             return (
-                <div className={`${indent ? 'ml-4 opacity-80' : ''} space-y-1.5`}>
+                <div className="space-y-1.5">
                     <div className="flex justify-between items-end px-1">
-                        <span className={`text-[9px] font-black uppercase tracking-wider ${indent ? 'text-slate-600' : 'text-slate-500'}`}>{label}</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">{label}</span>
                         <span className="text-[10px] font-bold text-slate-400">{Math.round(value)}g <span className="opacity-30">/ {target}g</span></span>
                     </div>
                     <div className="h-1.5 w-full bg-slate-800/50 rounded-full overflow-hidden">
@@ -125,6 +104,13 @@
                 </div>
             );
         };
+
+        const SubMacroRow = ({ label, value, color }) => (
+            <div className="flex justify-between items-center px-1">
+                <span className="text-[8px] font-black uppercase tracking-wider text-slate-600">{label}</span>
+                <span className={`text-[10px] font-bold ${color}`}>{Math.round(value)}g</span>
+            </div>
+        );
 
         // --- MAIN APP ---
         function App() {
@@ -143,6 +129,7 @@
             const [isScanning, setIsScanning] = useState(false);
             const [selectedFood, setSelectedFood] = useState(null);
             const [editingInstanceId, setEditingInstanceId] = useState(null);
+            const [showDetails, setShowDetails] = useState(null);
             
             const [amount, setAmount] = useState(100);
             const [unit, setUnit] = useState('g');
@@ -164,8 +151,9 @@
                 c: acc.c + (Number(i.carbs) || 0),
                 s: acc.s + (Number(i.sugar) || 0),
                 f: acc.f + (Number(i.fat) || 0),
-                sf: acc.sf + (Number(i.saturatedFat) || 0)
-            }), { kcal: 0, p: 0, c: 0, s: 0, f: 0, sf: 0 }), [dailyLog]);
+                sf: acc.sf + (Number(i.saturatedFat) || 0),
+                uf: acc.uf + (Number(i.unsaturatedFat) || 0)
+            }), { kcal: 0, p: 0, c: 0, s: 0, f: 0, sf: 0, uf: 0 }), [dailyLog]);
 
             const frequentItems = useMemo(() => {
                 const counts = {};
@@ -182,7 +170,9 @@
                             sugar: item.baseSugar,
                             fat: item.baseFat,
                             saturatedFat: item.baseSaturatedFat,
-                            unit: '100g'
+                            unsaturatedFat: item.baseUnsaturatedFat || (item.baseFat - item.baseSaturatedFat),
+                            unit: '100g',
+                            image: item.image
                         });
                         seen.add(item.name);
                     }
@@ -219,6 +209,7 @@
                             sugar: p.nutriments.sugars_100g || 0,
                             fat: p.nutriments.fat_100g || 0,
                             saturatedFat: p.nutriments['saturated-fat_100g'] || 0,
+                            unsaturatedFat: (p.nutriments.fat_100g || 0) - (p.nutriments['saturated-fat_100g'] || 0),
                             unit: '100g',
                             image: p.image_front_small_url
                         });
@@ -230,7 +221,7 @@
                 if (!user.geminiApiKey) return alert("Hinterlege deinen Key im Profil!");
                 setIsThinking(true);
                 try {
-                    let prompt = `Analysiere das Gericht "${text || 'auf dem Bild'}". Schätze die Nährwerte PRO 100g/ml. Gib NUR JSON: {"name":"Name","calories":0,"protein":0,"carbs":0,"sugar":0,"fat":0,"saturatedFat":0,"unit":"100g"}`;
+                    let prompt = `Analysiere das Gericht "${text || 'auf dem Bild'}". Schätze die Nährwerte PRO 100g/ml. Gib NUR JSON: {"name":"Name","calories":0,"protein":0,"carbs":0,"sugar":0,"fat":0,"saturatedFat":0,"unsaturatedFat":0,"unit":"100g"}`;
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
 
@@ -256,10 +247,12 @@
                     protein: food.protein * factor, carbs: food.carbs * factor,
                     sugar: food.sugar * factor, fat: food.fat * factor,
                     saturatedFat: food.saturatedFat * factor,
+                    unsaturatedFat: food.unsaturatedFat * factor,
                     amountFactor: factor, amountDisplay: `${safeAmount}${unit}`,
                     baseCalories: food.calories, baseProtein: food.protein,
                     baseCarbs: food.carbs, baseSugar: food.sugar,
-                    baseFat: food.fat, baseSaturatedFat: food.saturatedFat
+                    baseFat: food.fat, baseSaturatedFat: food.saturatedFat,
+                    baseUnsaturatedFat: food.unsaturatedFat
                 };
                 
                 if (editingInstanceId) {
@@ -276,7 +269,7 @@
                 setSearchQuery(''); setApiResults([]); setSelectedFood(null); setEditingInstanceId(null); setAmount(100);
             };
 
-            const handleDiaryClick = (item) => {
+            const openEdit = (item) => {
                 setSelectedFood({
                     name: item.name,
                     calories: item.baseCalories,
@@ -285,11 +278,13 @@
                     sugar: item.baseSugar,
                     fat: item.baseFat,
                     saturatedFat: item.baseSaturatedFat,
+                    unsaturatedFat: item.baseUnsaturatedFat,
                     unit: '100g',
                     image: item.image
                 });
                 setAmount(Math.round(item.amountFactor * 100));
                 setEditingInstanceId(item.instanceId);
+                setShowDetails(null);
             };
 
             return (
@@ -297,8 +292,30 @@
                     
                     {/* SUCCESS OVERLAY */}
                     {showSuccess && (
-                        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[300] bg-emerald-500 text-slate-950 px-8 py-4 rounded-full font-black flex items-center gap-3 shadow-2xl animate-success-fade">
-                            <CheckIcon size={24} /> Erledigt!
+                        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[300] bg-brand-500 text-slate-950 px-8 py-4 rounded-full font-black flex items-center gap-3 shadow-2xl animate-success-fade">
+                            <CheckIcon size={24} /> Eintragen erfolgreich!
+                        </div>
+                    )}
+
+                    {/* MODAL: DETAILS */}
+                    {showDetails && (
+                        <div className="fixed inset-0 bg-slate-950/95 z-[200] flex items-center justify-center p-6 backdrop-blur-xl animate-in zoom-in duration-200">
+                            <div className="w-full glass-card rounded-[3rem] p-8 space-y-6">
+                                <div className="flex justify-between items-start">
+                                    <h3 className="text-2xl font-black">{showDetails.name}</h3>
+                                    <button onClick={() => setShowDetails(null)} className="p-2 bg-slate-800 rounded-full"><XIcon size={20}/></button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 text-center">
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Energie</div><div className="text-xl font-black text-brand-400">{Math.round(showDetails.calories)} kcal</div></div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Protein</div><div className="text-xl font-black text-fuchsia-400">{Math.round(showDetails.protein)}g</div></div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2 text-left"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Kohlenhydrate</div><div className="text-xl font-black text-blue-400">{Math.round(showDetails.carbs)}g <span className="text-xs text-blue-300/40 ml-2">davon {Math.round(showDetails.sugar)}g Zucker</span></div></div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2 text-left"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Fett</div><div className="text-xl font-black text-amber-400">{Math.round(showDetails.fat)}g <span className="text-xs text-amber-300/40 ml-2">davon {Math.round(showDetails.saturatedFat)}g gesättigt</span></div></div>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button onClick={() => setShowDetails(null)} className="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">Schließen</button>
+                                    <button onClick={() => openEdit(showDetails)} className="flex-[2] py-4 bg-brand-600 rounded-2xl font-black uppercase tracking-widest shadow-lg">Menge anpassen</button>
+                                </div>
+                            </div>
                         </div>
                     )}
 
@@ -314,7 +331,7 @@
                                     <div className="flex items-center gap-4">
                                         <button onClick={() => setAmount(Math.max(0, (amount||0) - 50))} className="p-5 bg-slate-800 rounded-2xl active:scale-90 transition-all"><MinusIcon size={20}/></button>
                                         <div className="flex-1 relative">
-                                            <input type="number" value={amount} onFocus={(e) => e.target.select()} onChange={e => setAmount(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-5 bg-slate-900 rounded-[1.5rem] text-3xl font-black text-center outline-none focus:ring-2 focus:ring-brand-500" />
+                                            <input type="number" value={amount} onFocus={(e) => e.target.select()} onChange={e => setAmount(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-5 bg-slate-900 rounded-[1.5rem] text-3xl font-black text-center outline-none focus:ring-2 focus:ring-brand-500 text-white" />
                                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 font-black">{unit}</span>
                                         </div>
                                         <button onClick={() => setAmount((amount||0) + 50)} className="p-5 bg-brand-500 text-slate-950 rounded-2xl active:scale-90 transition-all"><PlusIcon size={20}/></button>
@@ -329,7 +346,7 @@
                                     </div>
                                 </div>
                                 <button onClick={() => addEntry(selectedFood)} className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all">
-                                    {editingInstanceId ? 'Aktualisieren' : 'Bestätigen'}
+                                    {editingInstanceId ? 'Aktualisieren' : 'Hinzufügen'}
                                 </button>
                             </div>
                         </div>
@@ -339,7 +356,7 @@
                     {view === 'dashboard' && (
                         <div className="animate-in fade-in duration-500">
                             <div className="flex justify-between items-center mb-8 mt-4">
-                                <div><h1 className="text-2xl font-black tracking-tighter italic">Kalorien-Zähler</h1><p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mt-1">Heute, {new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })}</p></div>
+                                <div><h1 className="text-2xl font-black tracking-tighter italic">Kalorien-Zähler</h1><p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mt-1">{new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'long' })}</p></div>
                                 <button onClick={() => setView('profile')} className="p-4 glass-card rounded-[1.5rem] border border-white/10 active:scale-90 transition-all shadow-lg"><UserIcon size={24} className="text-brand-400"/></button>
                             </div>
 
@@ -351,24 +368,29 @@
                                         <MacroBar label="Protein" value={totals.p} target={user.targetP} color="bg-fuchsia-500" />
                                         <MacroBar label="Kohlenhydrate" value={totals.c} target={user.targetC} color="bg-blue-500" />
                                         <MacroBar label="Zucker" value={totals.s} target={user.targetS} color="bg-blue-300" />
-                                        <MacroBar label="Fett" value={totals.f} target={user.targetF} color="bg-amber-500" />
-                                        <MacroBar label="Gesättigt" value={totals.sf} target={20} color="bg-amber-700" indent={true} />
+                                        <div className="space-y-2">
+                                            <MacroBar label="Fett" value={totals.f} target={user.targetF} color="bg-amber-500" />
+                                            <div className="space-y-1">
+                                                <SubMacroRow label="davon gesättigt" value={totals.sf} color="text-amber-700" />
+                                                <SubMacroRow label="ungesättigt" value={totals.uf} color="text-emerald-500" />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             <button onClick={() => setView('addFood')} className="w-full bg-brand-600 text-white py-6 rounded-[2.5rem] font-black uppercase tracking-widest shadow-2xl shadow-brand-500/20 active:scale-95 transition-all flex items-center justify-center gap-4 mb-12">
-                                <PlusIcon size={28} strokeWidth={4} /> Hinzufügen
+                                <PlusIcon size={28} strokeWidth={4} /> Essen hinzufügen
                             </button>
 
                             <div className="space-y-4">
                                 <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-4">Tagebuch</h3>
                                 <div className="space-y-3">
                                     {dailyLog.items.length === 0 ? (
-                                        <div className="py-16 text-center opacity-30 italic text-sm">Keine Einträge</div>
+                                        <div className="py-16 text-center opacity-30 italic text-sm">Keine Einträge heute</div>
                                     ) : (
                                         [...dailyLog.items].reverse().map(item => (
-                                            <div key={item.instanceId} onClick={() => handleDiaryClick(item)} className="glass-card p-4 rounded-[1.8rem] flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer border border-white/5 hover:border-brand-500/20">
+                                            <div key={item.instanceId} onClick={() => setShowDetails(item)} className="glass-card p-4 rounded-[1.8rem] flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer">
                                                 <div className="flex items-center gap-4">
                                                     {item.image ? <img src={item.image} className="w-14 h-14 rounded-2xl object-cover border border-white/10" /> : <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600"><UtensilsIcon size={24}/></div>}
                                                     <div><div className="font-bold text-white tracking-tight">{item.name}</div><div className="text-[10px] font-black text-slate-500 uppercase mt-0.5">{item.amountDisplay} <span className="mx-1">•</span> {Math.round(item.calories)} kcal</div></div>
@@ -387,12 +409,12 @@
                         <div className="animate-in slide-in-from-bottom duration-300 p-2">
                             <div className="flex items-center gap-4 mb-10 mt-4">
                                 <button onClick={() => { setView('dashboard'); setApiResults([]); }} className="p-4 glass-card rounded-2xl"><ArrowLeftIcon size={24}/></button>
-                                <h2 className="text-3xl font-black tracking-tight">Tracken</h2>
+                                <h2 className="text-3xl font-black tracking-tight text-white">Tracken</h2>
                             </div>
 
                             <div className="space-y-5 mb-10">
                                 <div className="flex gap-2">
-                                    <input type="text" placeholder="Essen suchen..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="flex-[3] p-5 bg-slate-900 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 text-white font-bold shadow-inner" />
+                                    <input type="text" placeholder="Suchen..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="flex-[3] p-5 bg-slate-900 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 text-white font-bold shadow-inner" />
                                     <button onClick={startBarcodeScan} className="flex-1 bg-brand-600 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg active:scale-95 transition-all text-slate-950">
                                         <BarcodeIcon size={20}/><span className="text-[8px] font-black uppercase">Barcode</span>
                                     </button>
@@ -414,7 +436,7 @@
                             </div>
 
                             {/* FAVS */}
-                            {!searchQuery && (
+                            {!searchQuery && apiResults.length === 0 && (
                                 <div className="space-y-4">
                                     <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-2">Häufig gegessen</h3>
                                     <div className="space-y-3">
@@ -430,6 +452,19 @@
                                     </div>
                                 </div>
                             )}
+
+                            {/* SEARCH RESULTS */}
+                            <div className="space-y-3 mt-4">
+                                {apiResults.map(f => (
+                                    <div key={f.id || 'res'} onClick={() => setSelectedFood(f)} className="glass-card p-4 rounded-[2rem] flex justify-between items-center animate-in zoom-in cursor-pointer active:scale-98">
+                                        <div className="flex items-center gap-4">
+                                            {f.image ? <img src={f.image} className="w-12 h-12 rounded-xl object-cover" /> : <UtensilsIcon size={20} className="text-slate-600" />}
+                                            <div><div className="font-bold text-white">{f.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{f.calories} kcal / 100g</div></div>
+                                        </div>
+                                        <div className="p-2 bg-brand-500 text-slate-950 rounded-xl shadow-lg"><PlusIcon size={20}/></div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
 
@@ -437,12 +472,12 @@
                     {showAiModal && (
                         <div className="fixed inset-0 bg-slate-950/95 z-[250] flex items-center justify-center p-6 backdrop-blur-xl">
                             <div className="w-full glass-card rounded-[2.5rem] p-8 space-y-6 animate-in zoom-in duration-200">
-                                <h3 className="text-xl font-black flex items-center gap-3"><CameraIcon className="text-brand-400"/> Foto-Details</h3>
+                                <h3 className="text-xl font-black flex items-center gap-3"><CameraIcon className="text-brand-400"/> Foto-Info</h3>
                                 <img src={aiImage} className="w-full h-44 object-cover rounded-3xl border border-white/10 shadow-2xl" />
-                                <textarea placeholder="Was genau ist zu sehen? (z.B. große Portion, extra Beilage...)" value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none text-sm h-28 font-medium text-white shadow-inner" />
+                                <textarea placeholder="Was genau hast du gegessen?..." value={aiDesc} onChange={e => setAiDesc(e.target.value)} className="w-full p-5 bg-slate-900 border border-white/5 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none text-sm h-28 font-medium text-white shadow-inner" />
                                 <div className="flex gap-3">
                                     <button onClick={() => {setShowAiModal(false); setAiImage(null);}} className="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">Abbruch</button>
-                                    <button onClick={() => askGemini(aiDesc, aiImage)} disabled={isThinking} className="flex-1 py-4 bg-brand-500 text-slate-950 rounded-2xl font-black flex items-center justify-center gap-2 active:scale-95">
+                                    <button onClick={() => askGemini(aiDesc, aiImage)} disabled={isThinking} className="flex-1 py-4 bg-brand-500 text-slate-950 rounded-2xl font-black flex items-center justify-center gap-2 active:scale-95 transition-all">
                                         {isThinking ? <Loader size={18}/> : "Absenden"}
                                     </button>
                                 </div>
@@ -457,24 +492,24 @@
                                 <button onClick={() => setView('dashboard')} className="p-4 glass-card rounded-2xl active:scale-90"><ArrowLeftIcon size={24}/></button>
                                 <h2 className="text-3xl font-black tracking-tight text-white">Ziele</h2>
                             </div>
-                            <div className="glass-card p-8 rounded-[3rem] space-y-6 shadow-2xl border border-white/10">
+                            <div className="glass-card p-8 rounded-[3rem] space-y-6 shadow-2xl border border-white/10 overflow-y-auto max-h-[75vh]">
                                 <GoalInput label="Energie (kcal)" value={user.target} color="text-brand-400" onChange={v => setUser({...user, target: v})} />
                                 <div className="grid grid-cols-2 gap-4">
-                                    <GoalInput label="Protein" value={user.targetP} color="text-fuchsia-400" onChange={v => setUser({...user, targetP: v})} />
-                                    <GoalInput label="Kohlenhydrate" value={user.targetC} color="text-blue-400" onChange={v => setUser({...user, targetC: v})} />
-                                    <GoalInput label="Fett" value={user.targetF} color="text-amber-400" onChange={v => setUser({...user, targetF: v})} />
-                                    <GoalInput label="Zucker" value={user.targetS} color="text-blue-300" onChange={v => setUser({...user, targetS: v})} />
+                                    <GoalInput label="Protein (g)" value={user.targetP} color="text-fuchsia-400" onChange={v => setUser({...user, targetP: v})} />
+                                    <GoalInput label="Kohlenhydrate (g)" value={user.targetC} color="text-blue-400" onChange={v => setUser({...user, targetC: v})} />
+                                    <GoalInput label="Fett (g)" value={user.targetF} color="text-amber-400" onChange={v => setUser({...user, targetF: v})} />
+                                    <GoalInput label="Zucker (g)" value={user.targetS} color="text-blue-300" onChange={v => setUser({...user, targetS: v})} />
                                 </div>
-                                <div className="pt-8 border-t border-white/5">
-                                    <label className="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest block mb-2 px-1">Gemini API Key</label>
-                                    <input type="password" value={user.geminiApiKey} onChange={e => setUser({...user, geminiApiKey: e.target.value})} className="w-full p-4 bg-slate-800 rounded-2xl font-mono text-xs border border-white/5 text-white shadow-inner" />
+                                <div className="pt-8 border-t border-white/5 space-y-2">
+                                    <label className="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest block px-1">Gemini API Key</label>
+                                    <input type="password" value={user.geminiApiKey} onChange={e => setUser({...user, geminiApiKey: e.target.value})} className="w-full p-4 bg-slate-800 rounded-2xl font-mono text-xs border border-white/5 text-white" />
                                 </div>
                                 <button onClick={() => { if(confirm("App zurücksetzen?")) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-rose-500/5 border border-rose-500/20 text-rose-500 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest mt-4">Reset</button>
                             </div>
                         </div>
                     )}
 
-                    {/* SCANNER MODAL */}
+                    {/* BARCODE SCANNER MODAL */}
                     {isScanning && (
                         <div className="fixed inset-0 bg-slate-950 z-[300] flex flex-col items-center justify-center p-6 backdrop-blur-3xl animate-in zoom-in duration-300">
                             <div className="w-full max-w-md glass-card rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl">
