@@ -869,7 +869,14 @@
                             <button onClick={() => { if(confirm("Wirklich alles löschen?")) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-slate-900 border border-rose-500/20 text-rose-500 py-4 rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-rose-500/10 transition-all active:scale-95 shadow-lg">App zurücksetzen</button>
                         </div>
                     </div>
-                    <BottomNav currentView={view} setView={(v) => setView(v)} />
+                    <BottomNav currentView={view} setView={(v) => {
+                        if (v === 'addFood_central') {
+                            setSelectedMeal('snacks');
+                            setView('addFood');
+                        } else {
+                            setView(v);
+                        }
+                    }} />
                 </div>
               )}
 
@@ -953,7 +960,14 @@
                             </div>
                         </div>
                     </div>
-                    <BottomNav currentView={view} setView={(v) => setView(v)} />
+                    <BottomNav currentView={view} setView={(v) => {
+                        if (v === 'addFood_central') {
+                            setSelectedMeal('snacks');
+                            setView('addFood');
+                        } else {
+                            setView(v);
+                        }
+                    }} />
                 </div>
               )}
 
@@ -1040,7 +1054,14 @@
                             )}
                         </div>
                     </div>
-                    <BottomNav currentView={view} setView={(v) => setView(v)} />
+                    <BottomNav currentView={view} setView={(v) => {
+                        if (v === 'addFood_central') {
+                            setSelectedMeal('snacks');
+                            setView('addFood');
+                        } else {
+                            setView(v);
+                        }
+                    }} />
                 </div>
               )}
             </div>
