@@ -173,41 +173,36 @@
 
             const aiFileRef = useRef();
             const qrInstance = useRef(null);
-
-            const searchTimeout = useRef(null);
-
-            const [searchProgress, setSearchProgress] = useState(0);
+            const searchInputRef = useRef(null);
 
             // LOCAL SEARCH LOGIC
             const triggerSearch = async () => {
                 if (searchQuery.length < 1) return;
-                
                 setIsSearching(true);
-                setSearchProgress(0);
-
-                // Simulate progress for feel
-                for(let i=0; i<=100; i+=20) {
-                    setSearchProgress(i);
-                    await new Promise(r => setTimeout(r, 50));
-                }
-
                 const query = searchQuery.toLowerCase();
                 const results = itemHistory
                     .filter(item => typeof item === 'object' && item !== null && item.name.toLowerCase().includes(query))
                     .map(item => ({
                         ...item,
                         id: item.id || Math.random(),
-                        calories: item.baseCalories || item.calories || 0,
-                        protein: item.baseProtein || item.protein || 0,
-                        carbs: item.baseCarbs || item.carbs || 0,
-                        sugar: item.baseSugar || item.sugar || 0,
-                        fat: item.baseFat || item.fat || 0,
-                        saturatedFat: item.baseSaturatedFat || item.saturatedFat || 0,
-                        unsaturatedFat: item.baseUnsaturatedFat || item.unsaturatedFat || 0,
+                        calories: Number(item.baseCalories ?? item.calories ?? 0),
+                        protein: Number(item.baseProtein ?? item.protein ?? 0),
+                        carbs: Number(item.baseCarbs ?? item.carbs ?? 0),
+                        sugar: Number(item.baseSugar ?? item.sugar ?? 0),
+                        fat: Number(item.baseFat ?? item.fat ?? 0),
+                        saturatedFat: Number(item.baseSaturatedFat ?? item.saturatedFat ?? 0),
+                        unsaturatedFat: Number(item.baseUnsaturatedFat ?? item.unsaturatedFat ?? 0),
                     }));
-
                 setApiResults(results);
                 setIsSearching(false);
+            };
+
+            const handleAiTextClick = () => {
+                if (searchQuery.length < 2) {
+                    if (searchInputRef.current) searchInputRef.current.focus();
+                } else {
+                    askGemini(searchQuery);
+                }
             };
 
             useEffect(() => {
@@ -216,7 +211,7 @@
                     setIsSearching(false);
                     return;
                 }
-                const timeout = setTimeout(() => triggerSearch(), 300);
+                const timeout = setTimeout(triggerSearch, 300);
                 return () => clearTimeout(timeout);
             }, [searchQuery]);
 
@@ -229,21 +224,11 @@
                 const isModalOpen = !!(selectedFood || showAiModal || showDetails || isScanning);
                 document.body.style.overflow = isModalOpen ? 'hidden' : '';
                 document.body.style.touchAction = isModalOpen ? 'none' : '';
-                return () => {
-                    document.body.style.overflow = '';
-                    document.body.style.touchAction = '';
-                };
             }, [selectedFood, showAiModal, showDetails, isScanning]);
 
             const handleSafeAction = (fn) => (e) => {
-                if (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-                if (document.activeElement && document.activeElement.tagName !== 'BODY') {
-                    document.activeElement.blur();
-                }
-                // Delay allows keyboard to start closing and layout to snap back
+                if (e) { e.preventDefault(); e.stopPropagation(); }
+                if (document.activeElement && document.activeElement.tagName !== 'BODY') document.activeElement.blur();
                 setTimeout(fn, 100);
             };
 
@@ -258,29 +243,10 @@
             }), { kcal: 0, p: 0, c: 0, s: 0, f: 0, sf: 0, uf: 0 }), [dailyLog]);
 
             const frequentItems = useMemo(() => {
-                const counts = {};
-                itemHistory.forEach(name => counts[name] = (counts[name] || 0) + 1);
-                const uniqueFoods = [];
-                const seen = new Set();
-                [...dailyLog.items].reverse().forEach(item => {
-                    if(!seen.has(item.name)) {
-                        uniqueFoods.push({
-                            name: item.name,
-                            baseCalories: item.baseCalories,
-                            baseProtein: item.baseProtein,
-                            baseCarbs: item.baseCarbs,
-                            baseSugar: item.baseSugar,
-                            baseFat: item.baseFat,
-                            baseSaturatedFat: item.baseSaturatedFat,
-                            baseUnsaturatedFat: item.baseUnsaturatedFat || (item.baseFat - item.baseSaturatedFat),
-                            unit: '100g',
-                            image: item.image
-                        });
-                        seen.add(item.name);
-                    }
-                });
-                return uniqueFoods.sort((a, b) => (counts[b.name] || 0) - (counts[a.name] || 0)).slice(0, 5);
-            }, [dailyLog, itemHistory]);
+                return itemHistory
+                    .filter(item => typeof item === 'object' && item !== null)
+                    .slice(0, 5);
+            }, [itemHistory]);
 
             const startBarcodeScan = () => {
                 setIsScanning(true);
@@ -312,7 +278,6 @@
                             fat: p.nutriments.fat_100g || 0,
                             saturatedFat: p.nutriments['saturated-fat_100g'] || 0,
                             unsaturatedFat: (p.nutriments.fat_100g || 0) - (p.nutriments['saturated-fat_100g'] || 0),
-                            unit: '100g',
                             image: p.image_front_small_url
                         };
                         setSelectedFood(item);
@@ -327,6 +292,7 @@
                 setIsThinking(true);
                 try {
                     let prompt = `Gib NUR ein valides JSON-Objekt zurück. Keine Einleitung, keine Formatierung (kein \`\`\`json).
+WICHTIG: Die Nährwerte (calories, protein, carbs, sugar, fat, saturatedFat) müssen sich IMMER auf 100g beziehen.
 
 JSON-Struktur:
 {
@@ -345,7 +311,7 @@ Analyse das folgende Gericht: "${text || 'auf dem Bild'}"`;
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
 
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${user.geminiApiKey}`, {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${user.geminiApiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents })
@@ -365,19 +331,31 @@ Analyse das folgende Gericht: "${text || 'auf dem Bild'}"`;
             const addEntry = (food) => {
                 const safeAmount = Number(amount) || 0;
                 const factor = safeAmount / 100;
+                
+                // Ensure base values exist and are numbers to prevent NaN
+                const baseCalories = Number(food.baseCalories ?? food.calories ?? 0);
+                const baseProtein = Number(food.baseProtein ?? food.protein ?? 0);
+                const baseCarbs = Number(food.baseCarbs ?? food.carbs ?? 0);
+                const baseSugar = Number(food.baseSugar ?? food.sugar ?? 0);
+                const baseFat = Number(food.baseFat ?? food.fat ?? 0);
+                const baseSaturatedFat = Number(food.baseSaturatedFat ?? food.saturatedFat ?? 0);
+                const baseUnsaturatedFat = Number(food.baseUnsaturatedFat ?? food.unsaturatedFat ?? (baseFat - baseSaturatedFat));
+
                 const entry = { 
                     name: food.name,
                     instanceId: editingInstanceId || Date.now(),
-                    calories: Math.round(food.calories * factor),
-                    protein: food.protein * factor, carbs: food.carbs * factor,
-                    sugar: food.sugar * factor, fat: food.fat * factor,
-                    saturatedFat: food.saturatedFat * factor,
-                    unsaturatedFat: food.unsaturatedFat * factor,
+                    calories: Math.round(baseCalories * factor),
+                    protein: baseProtein * factor, 
+                    carbs: baseCarbs * factor,
+                    sugar: baseSugar * factor, 
+                    fat: baseFat * factor,
+                    saturatedFat: baseSaturatedFat * factor,
+                    unsaturatedFat: baseUnsaturatedFat * factor,
                     amountFactor: factor, amountDisplay: `${safeAmount}g`,
-                    baseCalories: food.calories, baseProtein: food.protein,
-                    baseCarbs: food.carbs, baseSugar: food.sugar,
-                    baseFat: food.fat, baseSaturatedFat: food.saturatedFat,
-                    baseUnsaturatedFat: food.unsaturatedFat,
+                    baseCalories, baseProtein,
+                    baseCarbs, baseSugar,
+                    baseFat, baseSaturatedFat,
+                    baseUnsaturatedFat,
                     image: food.image
                 };
                 
@@ -388,19 +366,19 @@ Analyse das folgende Gericht: "${text || 'auf dem Bild'}"`;
                     
                     // Update History with full object
                     setItemHistory(prev => {
-                        const filtered = prev.filter(i => i.name !== food.name);
+                        const filtered = prev.filter(i => typeof i === 'object' && i !== null && i.name !== food.name);
                         return [{
                             name: food.name,
-                            baseCalories: food.calories,
-                            baseProtein: food.protein,
-                            baseCarbs: food.carbs,
-                            baseSugar: food.sugar,
-                            baseFat: food.fat,
-                            baseSaturatedFat: food.saturatedFat,
-                            baseUnsaturatedFat: food.unsaturatedFat,
+                            baseCalories,
+                            baseProtein,
+                            baseCarbs,
+                            baseSugar,
+                            baseFat,
+                            baseSaturatedFat,
+                            baseUnsaturatedFat,
                             image: food.image,
                             id: food.id || Date.now()
-                        }, ...filtered].slice(0, 50); // Keep last 50 unique items
+                        }, ...filtered].slice(0, 50); 
                     });
                 }
                 
@@ -586,6 +564,7 @@ Analyse das folgende Gericht: "${text || 'auf dem Bild'}"`;
                                         <input 
                                             type="text" 
                                             placeholder="Essen suchen..." 
+                                            ref={searchInputRef}
                                             value={searchQuery} 
                                             onChange={e => setSearchQuery(e.target.value)}
                                             onKeyDown={e => e.key === 'Enter' && triggerSearch()}
@@ -603,7 +582,7 @@ Analyse das folgende Gericht: "${text || 'auf dem Bild'}"`;
                                     </button>
                                 </div>
                                 <div className="flex gap-3">
-                                    <button onClick={() => askGemini(searchQuery)} disabled={isThinking || searchQuery.length < 2} className="flex-1 bg-slate-900 border border-white/10 py-4 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2">
+                                    <button onClick={handleAiTextClick} disabled={isThinking} className="flex-1 bg-slate-900 border border-white/10 py-4 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2">
                                         {isThinking ? <LoaderIcon size={14}/> : <SparklesIcon size={14} className="text-brand-400"/>} AI Text
                                     </button>
                                     <button onClick={() => aiFileRef.current.click()} disabled={isThinking} className="flex-1 bg-brand-500 text-slate-950 py-4 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 shadow-lg active:scale-95">
@@ -638,14 +617,6 @@ Analyse das folgende Gericht: "${text || 'auf dem Bild'}"`;
 
                             {/* SEARCH RESULTS */}
                             <div className="space-y-3 mt-4">
-                                {isSearching && (
-                                    <div className="space-y-2 py-4">
-                                        <div className="text-center animate-pulse text-brand-400 font-black text-xs uppercase tracking-widest">Tiefensuche läuft...</div>
-                                        <div className="h-1 w-full bg-slate-900 rounded-full overflow-hidden">
-                                            <div className="h-full bg-brand-500 transition-all duration-300" style={{ width: `${searchProgress}%` }}></div>
-                                        </div>
-                                    </div>
-                                )}
                                 {!isSearching && searchQuery.length >= 2 && apiResults.length === 0 && (
                                     <div className="text-center py-10 space-y-4">
                                         <div className="opacity-30 italic text-sm">Keine Produkte gefunden</div>
