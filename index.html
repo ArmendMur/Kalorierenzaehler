@@ -78,6 +78,53 @@
         const LoaderIcon = (p) => <Icon d="M21 12a9 9 0 1 1-6.219-8.56" {...p} className="spinner" />;
 
         // --- HELPERS ---
+        const getFoodEmoji = (name = "") => {
+            const n = name.toLowerCase();
+            if (n.includes("pizza")) return "🍕";
+            if (n.includes("burger")) return "🍔";
+            if (n.includes("nudel") || n.includes("pasta") || n.includes("spaghetti")) return "🍝";
+            if (n.includes("salat")) return "🥗";
+            if (n.includes("apfel")) return "🍎";
+            if (n.includes("banane")) return "🍌";
+            if (n.includes("sushi")) return "🍣";
+            if (n.includes("döner") || n.includes("kebab") || n.includes("pita")) return "🥙";
+            if (n.includes("hähnchen") || n.includes("chicken")) return "🍗";
+            if (n.includes("steak") || n.includes("fleisch")) return "🥩";
+            if (n.includes("eis")) return "🍦";
+            if (n.includes("kaffee")) return "☕";
+            if (n.includes("tee")) return "🍵";
+            if (n.includes("wasser")) return "💧";
+            if (n.includes("cola") || n.includes("limo") || n.includes("fanta")) return "🥤";
+            if (n.includes("bier")) return "🍺";
+            if (n.includes("wein")) return "🍷";
+            if (n.includes("brot") || n.includes("brötchen")) return "🍞";
+            if (n.includes("ei ") || n.includes("eier") || n === "ei") return "🥚";
+            if (n.includes("milch")) return "🥛";
+            if (n.includes("gemüse") || n.includes("broccoli") || n.includes("gurke")) return "🥦";
+            if (n.includes("obst") || n.includes("frucht") || n.includes("beeren")) return "🍓";
+            if (n.includes("reis")) return "🍚";
+            if (n.includes("suppe")) return "🥣";
+            if (n.includes("kuchen") || n.includes("torte")) return "🍰";
+            if (n.includes("schoko")) return "🍫";
+            if (n.includes("käse")) return "🧀";
+            if (n.includes("fisch") || n.includes("lachs")) return "🐟";
+            if (n.includes("pommes")) return "🍟";
+            if (n.includes("taco")) return "🌮";
+            if (n.includes("burrito")) return "🌯";
+            if (n.includes("popcorn")) return "🍿";
+            if (n.includes("pfannkuchen") || n.includes("pancake")) return "🥞";
+            if (n.includes("sandwich") || n.includes("toast")) return "🥪";
+            if (n.includes("brezel") || n.includes("pretzel")) return "🥨";
+            if (n.includes("hotdog") || n.includes("hot dog")) return "🌭";
+            if (n.includes("joghurt")) return "🍦";
+            if (n.includes("kartoffel")) return "🥔";
+            if (n.includes("tomate")) return "🍅";
+            if (n.includes("avocado")) return "🥑";
+            if (n.includes("nüsse") || n.includes("nuss")) return "🥜";
+            if (n.includes("cookie") || n.includes("keks")) return "🍪";
+            return "🍽️";
+        };
+
         const resizeImage = (file) => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -308,7 +355,7 @@
                 if (!user.geminiApiKey) return alert("Hinterlege deinen Key im Profil!");
                 setIsThinking(true);
                 try {
-                    const prompt = "Nährwerte/100g für: " + (text || "das Bild") + ". Gib NUR JSON zurück: {name(string), calories(int), protein(float), carbs(float), sugar(float), fat(float), saturatedFat(float), estimatedPortionWeight(int)}. Falls kein Essen erkannt wird, nutze name:'Unbekannt' und 0-Werte.";
+                    const prompt = "Nährwerte/100g für: " + (text || "das Bild") + ". Gib NUR JSON zurück: {name(string), calories(int), protein(float), carbs(float), sugar(float), fat(float), saturatedFat(float), estimatedPortionWeight(int)}. Falls kein Essen erkannt wird, nutze name:'Unbekannt' and 0-Werte.";
                     
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
@@ -331,6 +378,11 @@
                     setShowAiModal(false); setAiImage(null); setAiDesc('');
                 } catch (e) { alert("KI Fehler: " + e.message); }
                 finally { setIsThinking(false); }
+            };
+
+            const selectFood = (food) => {
+                setSelectedFood(food);
+                setAmount(food.lastAmount || 100);
             };
 
             const addEntry = (food) => {
@@ -380,6 +432,7 @@
                             baseFat,
                             baseSaturatedFat,
                             baseUnsaturatedFat,
+                            lastAmount: safeAmount,
                             // Do not store images for AI scanned items to save space
                             image: food.isAi ? null : food.image,
                             id: food.id || Date.now()
@@ -435,8 +488,8 @@
                                 <div className="grid grid-cols-2 gap-4 text-center">
                                     <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">🔥 Energie</div><div className="text-xl font-black text-brand-400">{Math.round(showDetails.calories)} kcal</div></div>
                                     <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">💪 Protein</div><div className="text-xl font-black text-fuchsia-400">{Math.round(showDetails.protein)}g</div></div>
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2 text-left"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">🍞 Kohlenhydrate</div><div className="text-xl font-black text-blue-400">{Math.round(showDetails.carbs)}g <span className="text-xs text-blue-300/40 ml-2">davon {Math.round(showDetails.sugar)}g 🍭</span></div></div>
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2 text-left"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">🥑 Fett</div><div className="text-xl font-black text-amber-400">{Math.round(showDetails.fat)}g <span className="text-xs text-amber-300/40 ml-2">davon {Math.round(showDetails.saturatedFat)}g 🧊</span></div></div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2 text-left"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">🍞 Kohlenhydrate</div><div className="text-xl font-black text-blue-400">{Math.round(showDetails.carbs)}g <span className="text-xs text-blue-300/40 ml-2">davon {Math.round(showDetails.sugar)}g Zucker</span></div></div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2 text-left"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">🥑 Fett</div><div className="text-xl font-black text-amber-400">{Math.round(showDetails.fat)}g <span className="text-xs text-amber-300/40 ml-2">davon {Math.round(showDetails.saturatedFat)}g gesättigt</span></div></div>
                                 </div>
                                 <div className="flex gap-3">
                                     <button onClick={() => setShowDetails(null)} className="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">Schließen</button>
@@ -473,7 +526,7 @@
                                         <button type="button" onClick={() => setAmount((amount||0) + 50)} className="p-5 bg-brand-500 text-slate-950 rounded-2xl active:opacity-80 touch-manipulation"><PlusIcon size={20}/></button>
                                     </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-2 gap-3">
                                         <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center">
                                             <div className="text-[8px] font-black text-slate-500 uppercase">🔥 Energie</div>
                                             <div className="text-lg font-black text-brand-400">{Math.round(selectedFood.calories * ((amount||0)/100))} <span className="text-[8px]">kcal</span></div>
@@ -484,11 +537,11 @@
                                         </div>
                                         <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center col-span-2">
                                             <div className="text-[8px] font-black text-slate-500 uppercase">🍞 Kohlenhydrate</div>
-                                            <div className="text-lg font-black text-blue-400">{Math.round(selectedFood.carbs * ((amount||0)/100))}g <span className="text-xs text-blue-300/40 ml-2">davon {Math.round(selectedFood.sugar * ((amount||0)/100))}g 🍭</span></div>
+                                            <div className="text-lg font-black text-blue-400">{Math.round(selectedFood.carbs * ((amount||0)/100))}g <span className="text-xs text-blue-300/40 ml-2">davon {Math.round(selectedFood.sugar * ((amount||0)/100))}g Zucker</span></div>
                                         </div>
                                         <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center col-span-2">
                                             <div className="text-[8px] font-black text-slate-500 uppercase">🥑 Fett</div>
-                                            <div className="text-lg font-black text-amber-400">{Math.round(selectedFood.fat * ((amount||0)/100))}g <span className="text-xs text-amber-300/40 ml-2">davon {Math.round(selectedFood.saturatedFat * ((amount||0)/100))}g 🧊</span></div>
+                                            <div className="text-lg font-black text-amber-400">{Math.round(selectedFood.fat * ((amount||0)/100))}g <span className="text-xs text-amber-300/40 ml-2">davon {Math.round(selectedFood.saturatedFat * ((amount||0)/100))}g gesättigt</span></div>
                                         </div>
                                     </div>
                                 </div>
@@ -543,7 +596,7 @@
                                             <div key={item.instanceId} onClick={() => setShowDetails(item)} className="glass-card p-4 rounded-[1.8rem] flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer">
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-14 h-14 rounded-2xl bg-slate-800/50 flex items-center justify-center text-2xl border border-white/5 shadow-inner">
-                                                        {item.image ? <img src={item.image} className="w-full h-full rounded-2xl object-cover" /> : '🍽️'}
+                                                        {item.image ? <img src={item.image} className="w-full h-full rounded-2xl object-cover" /> : getFoodEmoji(item.name)}
                                                     </div>
                                                     <div><div className="font-bold text-white tracking-tight">{item.name}</div><div className="text-[10px] font-black text-slate-500 uppercase mt-0.5">{item.amountDisplay} <span className="mx-1">•</span> {Math.round(item.calories)} kcal</div></div>
                                                 </div>
@@ -632,11 +685,11 @@
                                                 
                                                 {/* CARD CONTENT */}
                                                 <div 
-                                                    onClick={() => setSelectedFood(item)} 
+                                                    onClick={() => selectFood(item)} 
                                                     className={`glass-card p-4 flex justify-between items-center active:scale-[0.98] transition-transform duration-300 relative z-10 cursor-pointer ${swipeId === item.name ? '-translate-x-24' : ''}`}
                                                 >
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center text-xl shadow-inner border border-white/5">🍽️</div>
+                                                        <div className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center text-xl shadow-inner border border-white/5">{getFoodEmoji(item.name)}</div>
                                                         <div><div className="font-bold text-sm text-white">{item.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{Math.round(item.baseCalories)} kcal / 100g</div></div>
                                                     </div>
                                                     <PlusIcon size={16} className="text-brand-400"/>
@@ -661,10 +714,10 @@
                                     </div>
                                 )}
                                 {apiResults.map(f => (
-                                    <div key={f.id} onClick={() => setSelectedFood(f)} className="glass-card p-4 rounded-[2rem] flex justify-between items-center animate-in zoom-in cursor-pointer active:scale-98">
+                                    <div key={f.id} onClick={() => selectFood(f)} className="glass-card p-4 rounded-[2rem] flex justify-between items-center animate-in zoom-in cursor-pointer active:scale-98">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-xl bg-slate-800/50 flex items-center justify-center text-xl border border-white/5 shadow-inner">
-                                                {f.image ? <img src={f.image} className="w-full h-full rounded-xl object-cover" /> : '🍽️'}
+                                                {f.image ? <img src={f.image} className="w-full h-full rounded-xl object-cover" /> : getFoodEmoji(f.name)}
                                             </div>
                                             <div><div className="font-bold text-white">{f.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{Math.round(f.calories)} kcal / 100g</div></div>
                                         </div>
