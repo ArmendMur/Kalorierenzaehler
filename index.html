@@ -312,17 +312,16 @@
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${user.geminiApiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            contents,
-                            generationConfig: {
-                                responseMimeType: "application/json"
-                            }
-                        })
+                        body: JSON.stringify({ contents })
                     });
                     const data = await res.json();
                     if(data.error) throw new Error(data.error.message);
                     
-                    const json = JSON.parse(data.candidates[0].content.parts[0].text);
+                    // Robust parsing: finds JSON in the text even if AI adds markdown backticks
+                    const textContent = data.candidates[0].content.parts[0].text;
+                    const jsonMatch = textContent.match(/\{[\s\S]*\}/);
+                    if (!jsonMatch) throw new Error("Kein gültiges JSON in der KI-Antwort gefunden.");
+                    const json = JSON.parse(jsonMatch[0]);
                     
                     setSelectedFood({ ...json, id: Date.now(), isAi: true, image: img });
                     if (json.estimatedPortionWeight) setAmount(json.estimatedPortionWeight);
