@@ -226,6 +226,10 @@
                 const isModalOpen = !!(selectedFood || showAiModal || showDetails || isScanning);
                 document.body.style.overflow = isModalOpen ? 'hidden' : '';
                 document.body.style.touchAction = isModalOpen ? 'none' : '';
+                return () => {
+                    document.body.style.overflow = '';
+                    document.body.style.touchAction = '';
+                };
             }, [selectedFood, showAiModal, showDetails, isScanning]);
 
             const handleSafeAction = (fn) => (e) => {
@@ -356,7 +360,8 @@
                     baseCarbs, baseSugar,
                     baseFat, baseSaturatedFat,
                     baseUnsaturatedFat,
-                    image: food.image
+                    // Do not store images for AI scans in daily log to save space
+                    image: food.isAi ? null : food.image
                 };
                 
                 if (editingInstanceId) {
@@ -428,10 +433,10 @@
                                     <button onClick={() => setShowDetails(null)} className="p-2 bg-slate-800 rounded-full"><XIcon size={20}/></button>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4 text-center">
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Energie</div><div className="text-xl font-black text-brand-400">{Math.round(showDetails.calories)} kcal</div></div>
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Protein</div><div className="text-xl font-black text-fuchsia-400">{Math.round(showDetails.protein)}g</div></div>
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2 text-left"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Kohlenhydrate</div><div className="text-xl font-black text-blue-400">{Math.round(showDetails.carbs)}g <span className="text-xs text-blue-300/40 ml-2">davon {Math.round(showDetails.sugar)}g Zucker</span></div></div>
-                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2 text-left"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">Fett</div><div className="text-xl font-black text-amber-400">{Math.round(showDetails.fat)}g <span className="text-xs text-amber-300/40 ml-2">davon {Math.round(showDetails.saturatedFat)}g gesättigt</span></div></div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">🔥 Energie</div><div className="text-xl font-black text-brand-400">{Math.round(showDetails.calories)} kcal</div></div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">💪 Protein</div><div className="text-xl font-black text-fuchsia-400">{Math.round(showDetails.protein)}g</div></div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2 text-left"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">🍞 Kohlenhydrate</div><div className="text-xl font-black text-blue-400">{Math.round(showDetails.carbs)}g <span className="text-xs text-blue-300/40 ml-2">davon {Math.round(showDetails.sugar)}g 🍭</span></div></div>
+                                    <div className="p-4 bg-slate-900 rounded-2xl border border-white/5 col-span-2 text-left"><div className="text-[10px] font-black text-slate-500 uppercase mb-1">🥑 Fett</div><div className="text-xl font-black text-amber-400">{Math.round(showDetails.fat)}g <span className="text-xs text-amber-300/40 ml-2">davon {Math.round(showDetails.saturatedFat)}g 🧊</span></div></div>
                                 </div>
                                 <div className="flex gap-3">
                                     <button onClick={() => setShowDetails(null)} className="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">Schließen</button>
@@ -468,22 +473,22 @@
                                         <button type="button" onClick={() => setAmount((amount||0) + 50)} className="p-5 bg-brand-500 text-slate-950 rounded-2xl active:opacity-80 touch-manipulation"><PlusIcon size={20}/></button>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-2 gap-3">
                                         <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center">
-                                            <div className="text-[8px] font-black text-slate-500 uppercase">Energie</div>
+                                            <div className="text-[8px] font-black text-slate-500 uppercase">🔥 Energie</div>
                                             <div className="text-lg font-black text-brand-400">{Math.round(selectedFood.calories * ((amount||0)/100))} <span className="text-[8px]">kcal</span></div>
                                         </div>
                                         <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center">
-                                            <div className="text-[8px] font-black text-slate-500 uppercase">Protein</div>
+                                            <div className="text-[8px] font-black text-slate-500 uppercase">💪 Protein</div>
                                             <div className="text-lg font-black text-fuchsia-400">{Math.round(selectedFood.protein * ((amount||0)/100))}g</div>
                                         </div>
                                         <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center col-span-2">
-                                            <div className="text-[8px] font-black text-slate-500 uppercase">Kohlenhydrate</div>
-                                            <div className="text-lg font-black text-blue-400">{Math.round(selectedFood.carbs * ((amount||0)/100))}g <span className="text-xs text-blue-300/40 ml-2">davon {Math.round(selectedFood.sugar * ((amount||0)/100))}g Zucker</span></div>
+                                            <div className="text-[8px] font-black text-slate-500 uppercase">🍞 Kohlenhydrate</div>
+                                            <div className="text-lg font-black text-blue-400">{Math.round(selectedFood.carbs * ((amount||0)/100))}g <span className="text-xs text-blue-300/40 ml-2">davon {Math.round(selectedFood.sugar * ((amount||0)/100))}g 🍭</span></div>
                                         </div>
                                         <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center col-span-2">
-                                            <div className="text-[8px] font-black text-slate-500 uppercase">Fett</div>
-                                            <div className="text-lg font-black text-amber-400">{Math.round(selectedFood.fat * ((amount||0)/100))}g <span className="text-xs text-amber-300/40 ml-2">davon {Math.round(selectedFood.saturatedFat * ((amount||0)/100))}g gesättigt</span></div>
+                                            <div className="text-[8px] font-black text-slate-500 uppercase">🥑 Fett</div>
+                                            <div className="text-lg font-black text-amber-400">{Math.round(selectedFood.fat * ((amount||0)/100))}g <span className="text-xs text-amber-300/40 ml-2">davon {Math.round(selectedFood.saturatedFat * ((amount||0)/100))}g 🧊</span></div>
                                         </div>
                                     </div>
                                 </div>
@@ -510,14 +515,14 @@
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 items-center">
                                     <ProgressRing consumed={totals.kcal} target={user.target} />
                                     <div className="space-y-4">
-                                        <MacroBar label="Protein" value={totals.p} target={user.targetP} color="bg-fuchsia-500" />
-                                        <MacroBar label="Kohlenhydrate" value={totals.c} target={user.targetC} color="bg-blue-500" />
-                                        <MacroBar label="Zucker" value={totals.s} target={user.targetS} color="bg-blue-300" />
+                                        <MacroBar label="💪 Protein" value={totals.p} target={user.targetP} color="bg-fuchsia-500" />
+                                        <MacroBar label="🍞 Kohlenhydrate" value={totals.c} target={user.targetC} color="bg-blue-500" />
+                                        <MacroBar label="🍭 Zucker" value={totals.s} target={user.targetS} color="bg-blue-300" />
                                         <div className="space-y-2">
-                                            <MacroBar label="Fett" value={totals.f} target={user.targetF} color="bg-amber-500" />
+                                            <MacroBar label="🥑 Fett" value={totals.f} target={user.targetF} color="bg-amber-500" />
                                             <div className="space-y-1">
-                                                <SubMacroRow label="davon gesättigt" value={totals.sf} color="text-amber-700" />
-                                                <SubMacroRow label="ungesättigt" value={totals.uf} color="text-emerald-500" />
+                                                <SubMacroRow label="🧊 davon gesättigt" value={totals.sf} color="text-amber-700" />
+                                                <SubMacroRow label="🌱 ungesättigt" value={totals.uf} color="text-emerald-500" />
                                             </div>
                                         </div>
                                     </div>
@@ -529,7 +534,7 @@
                             </button>
 
                             <div className="space-y-4">
-                                <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-4">Tagebuch</h3>
+                                <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-4">📅 Tagebuch</h3>
                                 <div className="space-y-3">
                                     {dailyLog.items.length === 0 ? (
                                         <div className="py-16 text-center opacity-30 italic text-sm">Keine Einträge heute</div>
@@ -537,7 +542,9 @@
                                         [...dailyLog.items].reverse().map(item => (
                                             <div key={item.instanceId} onClick={() => setShowDetails(item)} className="glass-card p-4 rounded-[1.8rem] flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer">
                                                 <div className="flex items-center gap-4">
-                                                    {item.image ? <img src={item.image} className="w-14 h-14 rounded-2xl object-cover border border-white/10" /> : <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600"><UtensilsIcon size={24}/></div>}
+                                                    <div className="w-14 h-14 rounded-2xl bg-slate-800/50 flex items-center justify-center text-2xl border border-white/5 shadow-inner">
+                                                        {item.image ? <img src={item.image} className="w-full h-full rounded-2xl object-cover" /> : '🍽️'}
+                                                    </div>
                                                     <div><div className="font-bold text-white tracking-tight">{item.name}</div><div className="text-[10px] font-black text-slate-500 uppercase mt-0.5">{item.amountDisplay} <span className="mx-1">•</span> {Math.round(item.calories)} kcal</div></div>
                                                 </div>
                                                 <button onClick={(e) => { e.stopPropagation(); setDailyLog(prev => ({...prev, items: prev.items.filter(i => i.instanceId !== item.instanceId)})); }} className="p-3 text-slate-700 hover:text-rose-500 transition-all"><TrashIcon size={20}/></button>
@@ -599,7 +606,7 @@
                             {/* FAVS */}
                             {!searchQuery && apiResults.length === 0 && (
                                 <div className="space-y-4">
-                                    <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-2">Häufig gegessen</h3>
+                                    <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-2">⭐ Häufig gegessen</h3>
                                     <div className="space-y-3">
                                         {frequentItems.map(item => (
                                             <div 
@@ -612,15 +619,15 @@
                                                     if (delta < -80) setSwipeId(null);
                                                 }}
                                             >
-                                                {/* DELETE BACKGROUND */}
+                                                {/* SUBTLE DELETE BACKGROUND */}
                                                 <div 
                                                     onClick={() => {
                                                         setItemHistory(prev => prev.filter(i => i.name !== item.name));
                                                         setSwipeId(null);
                                                     }}
-                                                    className="absolute inset-y-0 right-0 w-24 bg-rose-500 flex items-center justify-center text-white font-black uppercase text-[10px] tracking-widest"
+                                                    className="absolute inset-y-0 right-0 w-24 bg-slate-800/80 flex items-center justify-center text-rose-400 font-black uppercase text-[9px] tracking-widest border-l border-white/5"
                                                 >
-                                                    Löschen
+                                                    <TrashIcon size={14} className="mr-1"/> Löschen
                                                 </div>
                                                 
                                                 {/* CARD CONTENT */}
@@ -629,7 +636,7 @@
                                                     className={`glass-card p-4 flex justify-between items-center active:scale-[0.98] transition-transform duration-300 relative z-10 cursor-pointer ${swipeId === item.name ? '-translate-x-24' : ''}`}
                                                 >
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center text-brand-400"><UtensilsIcon size={18}/></div>
+                                                        <div className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center text-xl shadow-inner border border-white/5">🍽️</div>
                                                         <div><div className="font-bold text-sm text-white">{item.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{Math.round(item.baseCalories)} kcal / 100g</div></div>
                                                     </div>
                                                     <PlusIcon size={16} className="text-brand-400"/>
@@ -656,8 +663,10 @@
                                 {apiResults.map(f => (
                                     <div key={f.id} onClick={() => setSelectedFood(f)} className="glass-card p-4 rounded-[2rem] flex justify-between items-center animate-in zoom-in cursor-pointer active:scale-98">
                                         <div className="flex items-center gap-4">
-                                            {f.image ? <img src={f.image} className="w-12 h-12 rounded-xl object-cover" /> : <UtensilsIcon size={20} className="text-slate-600" />}
-                                            <div><div className="font-bold text-white">{f.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{f.calories} kcal / 100g</div></div>
+                                            <div className="w-12 h-12 rounded-xl bg-slate-800/50 flex items-center justify-center text-xl border border-white/5 shadow-inner">
+                                                {f.image ? <img src={f.image} className="w-full h-full rounded-xl object-cover" /> : '🍽️'}
+                                            </div>
+                                            <div><div className="font-bold text-white">{f.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{Math.round(f.calories)} kcal / 100g</div></div>
                                         </div>
                                         <div className="p-2 bg-brand-500 text-slate-950 rounded-xl shadow-lg"><PlusIcon size={20}/></div>
                                     </div>
@@ -705,10 +714,10 @@
                             <div className="glass-card p-8 rounded-[3rem] space-y-6 shadow-2xl border border-white/10 overflow-y-auto max-h-[75vh]">
                                 <GoalInput label="Energie (kcal)" value={user.target} color="text-brand-400" onChange={v => setUser({...user, target: v})} />
                                 <div className="grid grid-cols-2 gap-4">
-                                    <GoalInput label="Protein (g)" value={user.targetP} color="text-fuchsia-400" onChange={v => setUser({...user, targetP: v})} />
-                                    <GoalInput label="Kohlenhydrate (g)" value={user.targetC} color="text-blue-400" onChange={v => setUser({...user, targetC: v})} />
-                                    <GoalInput label="Fett (g)" value={user.targetF} color="text-amber-400" onChange={v => setUser({...user, targetF: v})} />
-                                    <GoalInput label="Zucker (g)" value={user.targetS} color="text-blue-300" onChange={v => setUser({...user, targetS: v})} />
+                                    <GoalInput label="💪 Protein (g)" value={user.targetP} color="text-fuchsia-400" onChange={v => setUser({...user, targetP: v})} />
+                                    <GoalInput label="🍞 Kohlenhydrate (g)" value={user.targetC} color="text-blue-400" onChange={v => setUser({...user, targetC: v})} />
+                                    <GoalInput label="🥑 Fett (g)" value={user.targetF} color="text-amber-400" onChange={v => setUser({...user, targetF: v})} />
+                                    <GoalInput label="🍭 Zucker (g)" value={user.targetS} color="text-blue-300" onChange={v => setUser({...user, targetS: v})} />
                                 </div>
                                 <div className="pt-8 border-t border-white/5 space-y-2">
                                     <label className="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest block mb-2 px-1">Gemini API Key</label>
