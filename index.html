@@ -245,6 +245,17 @@
             const frequentItems = useMemo(() => {
                 return itemHistory
                     .filter(item => typeof item === 'object' && item !== null)
+                    .map(item => ({
+                        ...item,
+                        // Ensure both base and standard keys exist to prevent NaN in modal/list
+                        calories: Number(item.baseCalories ?? item.calories ?? 0),
+                        protein: Number(item.baseProtein ?? item.protein ?? 0),
+                        carbs: Number(item.baseCarbs ?? item.carbs ?? 0),
+                        sugar: Number(item.baseSugar ?? item.sugar ?? 0),
+                        fat: Number(item.baseFat ?? item.fat ?? 0),
+                        saturatedFat: Number(item.baseSaturatedFat ?? item.saturatedFat ?? 0),
+                        unsaturatedFat: Number(item.baseUnsaturatedFat ?? item.unsaturatedFat ?? 0),
+                    }))
                     .slice(0, 5);
             }, [itemHistory]);
 
@@ -291,35 +302,29 @@
                 if (!user.geminiApiKey) return alert("Hinterlege deinen Key im Profil!");
                 setIsThinking(true);
                 try {
-                    let prompt = `Gib NUR ein valides JSON-Objekt zurück. Keine Einleitung, keine Formatierung (kein \`\`\`json).
-WICHTIG: Die Nährwerte (calories, protein, carbs, sugar, fat, saturatedFat) müssen sich IMMER auf 100g beziehen.
-
-JSON-Struktur:
-{
-"name": "Name des Gerichts",
-"calories": 0,
-"protein": 0,
-"carbs": 0,
-"sugar": 0,
-"fat": 0,
-"saturatedFat": 0,
-"unit": "g",
-"estimatedPortionWeight": 0
-}
-
-Analyse das folgende Gericht: "${text || 'auf dem Bild'}"`;
+                    let prompt = `Analyse das folgende Gericht: "${text || 'auf dem Bild'}". 
+                    Erstelle ein JSON-Objekt mit Nährwerten bezogen auf 100g. 
+                    Verwende EXAKT diese Keys: 
+                    name (string), calories (int), protein (float), carbs (float), sugar (float), fat (float), saturatedFat (float), estimatedPortionWeight (int).`;
+                    
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
 
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${user.geminiApiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents })
+                        body: JSON.stringify({ 
+                            contents,
+                            generationConfig: {
+                                response_mime_type: "application/json"
+                            }
+                        })
                     });
                     const data = await res.json();
                     if(data.error) throw new Error(data.error.message);
-                    const jsonStr = data.candidates[0].content.parts[0].text.match(/\{[\s\S]*\}/s)[0];
-                    const json = JSON.parse(jsonStr);
+                    
+                    // In JSON mode, the text is a pure JSON string
+                    const json = JSON.parse(data.candidates[0].content.parts[0].text);
                     
                     setSelectedFood({ ...json, id: Date.now(), isAi: true, image: img });
                     if (json.estimatedPortionWeight) setAmount(json.estimatedPortionWeight);
