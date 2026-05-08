@@ -304,7 +304,7 @@
                 if (!user.geminiApiKey) return alert("Hinterlege deinen Key im Profil!");
                 setIsThinking(true);
                 try {
-                    const prompt = "Analyse das Gericht: " + (text || "auf dem Bild") + ". Erstelle ein JSON-Objekt mit Nährwerten bezogen auf 100g. Keys: name (string), calories (int), protein (float), carbs (float), sugar (float), fat (float), saturatedFat (float), estimatedPortionWeight (int).";
+                    const prompt = "Nährwerte/100g für: " + (text || "Bild") + ". JSON: name(str), calories(int), protein(f), carbs(f), sugar(f), fat(f), saturatedFat(f), estimatedPortionWeight(int).";
                     
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
