@@ -170,6 +170,8 @@
             const [aiDesc, setAiDesc] = useState('');
             const [showAiModal, setShowAiModal] = useState(false);
             const [showSuccess, setShowSuccess] = useState(false);
+            const [swipeId, setSwipeId] = useState(null);
+            const touchStart = useRef(0);
 
             const aiFileRef = useRef();
             const qrInstance = useRef(null);
@@ -302,10 +304,7 @@
                 if (!user.geminiApiKey) return alert("Hinterlege deinen Key im Profil!");
                 setIsThinking(true);
                 try {
-                    let prompt = `Analyse das folgende Gericht: "${text || 'auf dem Bild'}". 
-                    Erstelle ein JSON-Objekt mit Nährwerten bezogen auf 100g. 
-                    Verwende EXAKT diese Keys: 
-                    name (string), calories (int), protein (float), carbs (float), sugar (float), fat (float), saturatedFat (float), estimatedPortionWeight (int).`;
+                    const prompt = "Analyse das Gericht: " + (text || "auf dem Bild") + ". Erstelle ein JSON-Objekt mit Nährwerten bezogen auf 100g. Keys: name (string), calories (int), protein (float), carbs (float), sugar (float), fat (float), saturatedFat (float), estimatedPortionWeight (int).";
                     
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
@@ -323,7 +322,6 @@
                     const data = await res.json();
                     if(data.error) throw new Error(data.error.message);
                     
-                    // In JSON mode, the text is a pure JSON string
                     const json = JSON.parse(data.candidates[0].content.parts[0].text);
                     
                     setSelectedFood({ ...json, id: Date.now(), isAi: true, image: img });
@@ -337,7 +335,6 @@
                 const safeAmount = Number(amount) || 0;
                 const factor = safeAmount / 100;
                 
-                // Ensure base values exist and are numbers to prevent NaN
                 const baseCalories = Number(food.baseCalories ?? food.calories ?? 0);
                 const baseProtein = Number(food.baseProtein ?? food.protein ?? 0);
                 const baseCarbs = Number(food.baseCarbs ?? food.carbs ?? 0);
@@ -369,7 +366,6 @@
                 } else {
                     setDailyLog(prev => ({ ...prev, items: [...prev.items, entry] }));
                     
-                    // Update History with full object
                     setItemHistory(prev => {
                         const filtered = prev.filter(i => typeof i === 'object' && i !== null && i.name !== food.name);
                         return [{
@@ -381,7 +377,8 @@
                             baseFat,
                             baseSaturatedFat,
                             baseUnsaturatedFat,
-                            image: food.image,
+                            // Do not store images for AI scanned items to save space
+                            image: food.isAi ? null : food.image,
                             id: food.id || Date.now()
                         }, ...filtered].slice(0, 50); 
                     });
@@ -404,7 +401,6 @@
                     fat: item.baseFat,
                     saturatedFat: item.baseSaturatedFat,
                     unsaturatedFat: item.baseUnsaturatedFat,
-                    unit: '100g',
                     image: item.image
                 });
                 setAmount(Math.round(item.amountFactor * 100));
@@ -608,12 +604,38 @@
                                     <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-2">Häufig gegessen</h3>
                                     <div className="space-y-3">
                                         {frequentItems.map(item => (
-                                            <div key={item.name} onClick={() => setSelectedFood(item)} className="glass-card p-4 rounded-[1.5rem] flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center text-brand-400"><UtensilsIcon size={18}/></div>
-                                                    <div><div className="font-bold text-sm text-white">{item.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{Math.round(item.baseCalories)} kcal / 100g</div></div>
+                                            <div 
+                                                key={item.name} 
+                                                className="relative overflow-hidden rounded-[1.5rem]"
+                                                onTouchStart={e => touchStart.current = e.touches[0].clientX}
+                                                onTouchEnd={e => {
+                                                    const delta = touchStart.current - e.changedTouches[0].clientX;
+                                                    if (delta > 80) setSwipeId(item.name);
+                                                    if (delta < -80) setSwipeId(null);
+                                                }}
+                                            >
+                                                {/* DELETE BACKGROUND */}
+                                                <div 
+                                                    onClick={() => {
+                                                        setItemHistory(prev => prev.filter(i => i.name !== item.name));
+                                                        setSwipeId(null);
+                                                    }}
+                                                    className="absolute inset-y-0 right-0 w-24 bg-rose-500 flex items-center justify-center text-white font-black uppercase text-[10px] tracking-widest"
+                                                >
+                                                    Löschen
                                                 </div>
-                                                <PlusIcon size={16} className="text-brand-400"/>
+                                                
+                                                {/* CARD CONTENT */}
+                                                <div 
+                                                    onClick={() => setSelectedFood(item)} 
+                                                    className={`glass-card p-4 flex justify-between items-center active:scale-[0.98] transition-transform duration-300 relative z-10 cursor-pointer ${swipeId === item.name ? '-translate-x-24' : ''}`}
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center text-brand-400"><UtensilsIcon size={18}/></div>
+                                                        <div><div className="font-bold text-sm text-white">{item.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{Math.round(item.baseCalories)} kcal / 100g</div></div>
+                                                    </div>
+                                                    <PlusIcon size={16} className="text-brand-400"/>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
