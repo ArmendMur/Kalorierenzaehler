@@ -106,15 +106,18 @@
             const circ = normRadius * 2 * Math.PI;
             const percent = Math.min(100, (consumed / (target || 1)) * 100) || 0;
             const offset = circ - (percent / 100) * circ;
+            const diff = target - consumed;
             return (
                 <div className="relative flex items-center justify-center">
                     <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
                         <circle stroke="#1e293b" strokeWidth={12} fill="transparent" r={normRadius} cx={radius} cy={radius} />
-                        <circle stroke="#8b5cf6" strokeWidth={12} strokeDasharray={circ} style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s' }} strokeLinecap="round" fill="transparent" r={normRadius} cx={radius} cy={radius} />
+                        <circle stroke={diff < 0 ? "#ef4444" : "#8b5cf6"} strokeWidth={12} strokeDasharray={circ} style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s' }} strokeLinecap="round" fill="transparent" r={normRadius} cx={radius} cy={radius} />
                     </svg>
                     <div className="absolute text-center">
-                        <div className="text-3xl font-black text-white tracking-tighter">{Math.max(0, Math.round(target - consumed))}</div>
-                        <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">kcal übrig</div>
+                        <div className="text-3xl font-black text-white tracking-tighter">{Math.round(consumed)}</div>
+                        <div className={`text-[9px] font-black uppercase tracking-widest ${diff < 0 ? 'text-rose-500' : 'text-slate-500'}`}>
+                            {diff < 0 ? `${Math.abs(Math.round(diff))} kcal drüber` : `${Math.round(diff)} kcal übrig`}
+                        </div>
                     </div>
                 </div>
             );
@@ -163,7 +166,6 @@
             const [showDetails, setShowDetails] = useState(null);
             
             const [amount, setAmount] = useState(100);
-            const [unit, setUnit] = useState('g');
             const [aiImage, setAiImage] = useState(null);
             const [aiDesc, setAiDesc] = useState('');
             const [showAiModal, setShowAiModal] = useState(false);
@@ -176,85 +178,46 @@
 
             const [searchProgress, setSearchProgress] = useState(0);
 
-            // REAL-TIME SEARCH LOGIC
-            const triggerSearch = async (signal, startTime = Date.now()) => {
-                if (searchQuery.length < 2) return;
+            // LOCAL SEARCH LOGIC
+            const triggerSearch = async () => {
+                if (searchQuery.length < 1) return;
                 
                 setIsSearching(true);
                 setSearchProgress(0);
 
-                // Fortschrittsbalken Animation
-                const progressInterval = setInterval(() => {
-                    const elapsed = Date.now() - startTime;
-                    const p = Math.min(100, (elapsed / 10000) * 100);
-                    setSearchProgress(p);
-                    if (p >= 100) clearInterval(progressInterval);
-                }, 100);
-
-                const performFetch = async () => {
-                    try {
-                        const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchQuery)}&search_simple=1&action=process&json=1&page_size=50&lc=de`, { signal });
-                        const data = await res.json();
-                        
-                        if (data && data.products && data.products.length > 0) {
-                            clearInterval(progressInterval);
-                            setSearchProgress(100);
-                            const formatted = data.products
-                                .map(p => {
-                                    const n = p.nutriments || {};
-                                    return {
-                                        id: p._id || p.code || Math.random(),
-                                        name: p.product_name_de || p.product_name || p.generic_name_de || p.brands || "Unbekanntes Produkt",
-                                        calories: Math.round(n['energy-kcal_100g'] || n['energy-kcal'] || 0),
-                                        protein: n.proteins_100g || n.proteins || 0,
-                                        carbs: n.carbohydrates_100g || n.carbohydrates || 0,
-                                        sugar: n.sugars_100g || n.sugars || 0,
-                                        fat: n.fat_100g || n.fat || 0,
-                                        saturatedFat: n['saturated-fat_100g'] || n['saturated-fat'] || 0,
-                                        unsaturatedFat: (n.fat_100g || 0) - (n['saturated-fat_100g'] || 0),
-                                        unit: '100g',
-                                        image: p.image_front_small_url || p.image_small_url
-                                    };
-                                })
-                                .filter(p => p.name !== "Unbekanntes Produkt");
-                            setApiResults(formatted);
-                            setIsSearching(false);
-                            return true;
-                        }
-                    } catch (e) {
-                        if (e.name === 'AbortError') return true;
-                    }
-                    return false;
-                };
-
-                // Versuche es über 10 Sekunden hinweg immer wieder
-                for (let i = 0; i < 5; i++) {
-                    const found = await performFetch();
-                    if (found) break;
-                    
-                    const elapsed = Date.now() - startTime;
-                    if (elapsed >= 10000) break;
-                    
-                    // Warte 2 Sekunden vor dem nächsten Versuch
-                    await new Promise(r => setTimeout(r, 2000));
+                // Simulate progress for feel
+                for(let i=0; i<=100; i+=20) {
+                    setSearchProgress(i);
+                    await new Promise(r => setTimeout(r, 50));
                 }
 
-                clearInterval(progressInterval);
+                const query = searchQuery.toLowerCase();
+                const results = itemHistory
+                    .filter(item => typeof item === 'object' && item !== null && item.name.toLowerCase().includes(query))
+                    .map(item => ({
+                        ...item,
+                        id: item.id || Math.random(),
+                        calories: item.baseCalories || item.calories || 0,
+                        protein: item.baseProtein || item.protein || 0,
+                        carbs: item.baseCarbs || item.carbs || 0,
+                        sugar: item.baseSugar || item.sugar || 0,
+                        fat: item.baseFat || item.fat || 0,
+                        saturatedFat: item.baseSaturatedFat || item.saturatedFat || 0,
+                        unsaturatedFat: item.baseUnsaturatedFat || item.unsaturatedFat || 0,
+                    }));
+
+                setApiResults(results);
                 setIsSearching(false);
             };
 
             useEffect(() => {
-                if (searchQuery.length < 2) {
+                if (searchQuery.length < 1) {
                     setApiResults([]);
                     setIsSearching(false);
                     return;
                 }
-                const controller = new AbortController();
-                searchTimeout.current = setTimeout(() => triggerSearch(controller.signal), 800); 
-                return () => {
-                    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-                    controller.abort();
-                };
+                const timeout = setTimeout(() => triggerSearch(), 300);
+                return () => clearTimeout(timeout);
             }, [searchQuery]);
 
             useEffect(() => { localStorage.setItem('kTrackUser', JSON.stringify(user)); }, [user]);
@@ -353,7 +316,8 @@
                             image: p.image_front_small_url
                         };
                         setSelectedFood(item);
-                        setAmount(100);
+                        const portion = p.serving_quantity ? Number(p.serving_quantity) : 100;
+                        setAmount(portion);
                     } else { alert("Produkt nicht gefunden."); }
                 } catch (e) { alert("Barcode Fehler."); }
             };
@@ -362,7 +326,22 @@
                 if (!user.geminiApiKey) return alert("Hinterlege deinen Key im Profil!");
                 setIsThinking(true);
                 try {
-                    let prompt = `Analysiere das Gericht "${text || 'auf dem Bild'}". Schätze die Nährwerte PRO 100g oder 100ml. Schätze AUCH das Gewicht der GESAMTEN Portion in Gramm oder ml. Gib NUR valides JSON zurück: {"name":"Name","calories":0,"protein":0,"carbs":0,"sugar":0,"fat":0,"saturatedFat":0,"unit":"100g","estimatedPortionWeight":350}`;
+                    let prompt = `Gib NUR ein valides JSON-Objekt zurück. Keine Einleitung, keine Formatierung (kein \`\`\`json).
+
+JSON-Struktur:
+{
+"name": "Name des Gerichts",
+"calories": 0,
+"protein": 0,
+"carbs": 0,
+"sugar": 0,
+"fat": 0,
+"saturatedFat": 0,
+"unit": "g",
+"estimatedPortionWeight": 0
+}
+
+Analyse das folgende Gericht: "${text || 'auf dem Bild'}"`;
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
 
@@ -394,7 +373,7 @@
                     sugar: food.sugar * factor, fat: food.fat * factor,
                     saturatedFat: food.saturatedFat * factor,
                     unsaturatedFat: food.unsaturatedFat * factor,
-                    amountFactor: factor, amountDisplay: `${safeAmount}${unit}`,
+                    amountFactor: factor, amountDisplay: `${safeAmount}g`,
                     baseCalories: food.calories, baseProtein: food.protein,
                     baseCarbs: food.carbs, baseSugar: food.sugar,
                     baseFat: food.fat, baseSaturatedFat: food.saturatedFat,
@@ -406,7 +385,23 @@
                     setDailyLog(prev => ({ ...prev, items: prev.items.map(i => i.instanceId === editingInstanceId ? entry : i) }));
                 } else {
                     setDailyLog(prev => ({ ...prev, items: [...prev.items, entry] }));
-                    setItemHistory(prev => [...prev, food.name]);
+                    
+                    // Update History with full object
+                    setItemHistory(prev => {
+                        const filtered = prev.filter(i => i.name !== food.name);
+                        return [{
+                            name: food.name,
+                            baseCalories: food.calories,
+                            baseProtein: food.protein,
+                            baseCarbs: food.carbs,
+                            baseSugar: food.sugar,
+                            baseFat: food.fat,
+                            baseSaturatedFat: food.saturatedFat,
+                            baseUnsaturatedFat: food.unsaturatedFat,
+                            image: food.image,
+                            id: food.id || Date.now()
+                        }, ...filtered].slice(0, 50); // Keep last 50 unique items
+                    });
                 }
                 
                 setShowSuccess(true);
@@ -491,13 +486,9 @@
                                                 onChange={e => setAmount(e.target.value === '' ? '' : Number(e.target.value))} 
                                                 className="w-full p-5 bg-slate-900 rounded-[1.5rem] text-3xl font-black text-center outline-none focus:ring-2 focus:ring-brand-500 text-white" 
                                             />
-                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 font-black pointer-events-none">{unit}</span>
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 font-black pointer-events-none">g</span>
                                         </div>
                                         <button type="button" onClick={() => setAmount((amount||0) + 50)} className="p-5 bg-brand-500 text-slate-950 rounded-2xl active:opacity-80 touch-manipulation"><PlusIcon size={20}/></button>
-                                    </div>
-                                    <div className="flex gap-2 justify-center">
-                                        <button type="button" onClick={() => setUnit('g')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='g'?'bg-white/10 text-brand-400 border border-brand-500/20':'text-slate-600'}`}>GRAMM</button>
-                                        <button type="button" onClick={() => setUnit('ml')} className={`px-8 py-2 rounded-xl font-black text-xs transition-all ${unit==='ml'?'bg-white/10 text-brand-400 border border-brand-500/20':'text-slate-600'}`}>ML</button>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-3">
@@ -509,13 +500,13 @@
                                             <div className="text-[8px] font-black text-slate-500 uppercase">Protein</div>
                                             <div className="text-lg font-black text-fuchsia-400">{Math.round(selectedFood.protein * ((amount||0)/100))}g</div>
                                         </div>
-                                        <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center">
+                                        <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center col-span-2">
                                             <div className="text-[8px] font-black text-slate-500 uppercase">Kohlenhydrate</div>
-                                            <div className="text-lg font-black text-blue-400">{Math.round(selectedFood.carbs * ((amount||0)/100))}g</div>
+                                            <div className="text-lg font-black text-blue-400">{Math.round(selectedFood.carbs * ((amount||0)/100))}g <span className="text-xs text-blue-300/40 ml-2">davon {Math.round(selectedFood.sugar * ((amount||0)/100))}g Zucker</span></div>
                                         </div>
-                                        <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center">
+                                        <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center col-span-2">
                                             <div className="text-[8px] font-black text-slate-500 uppercase">Fett</div>
-                                            <div className="text-lg font-black text-amber-400">{Math.round(selectedFood.fat * ((amount||0)/100))}g</div>
+                                            <div className="text-lg font-black text-amber-400">{Math.round(selectedFood.fat * ((amount||0)/100))}g <span className="text-xs text-amber-300/40 ml-2">davon {Math.round(selectedFood.saturatedFat * ((amount||0)/100))}g gesättigt</span></div>
                                         </div>
                                     </div>
                                 </div>
