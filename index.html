@@ -304,7 +304,7 @@
                 if (!user.geminiApiKey) return alert("Hinterlege deinen Key im Profil!");
                 setIsThinking(true);
                 try {
-                    const prompt = "Nährwerte/100g für: " + (text || "Bild") + ". JSON: name(str), calories(int), protein(f), carbs(f), sugar(f), fat(f), saturatedFat(f), estimatedPortionWeight(int).";
+                    const prompt = "Nährwerte/100g für: " + (text || "das Bild") + ". Gib NUR JSON zurück: {name(string), calories(int), protein(float), carbs(float), sugar(float), fat(float), saturatedFat(float), estimatedPortionWeight(int)}. Falls kein Essen erkannt wird, nutze name:'Unbekannt' und 0-Werte.";
                     
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
@@ -317,10 +317,9 @@
                     const data = await res.json();
                     if(data.error) throw new Error(data.error.message);
                     
-                    // Robust parsing: finds JSON in the text even if AI adds markdown backticks
                     const textContent = data.candidates[0].content.parts[0].text;
                     const jsonMatch = textContent.match(/\{[\s\S]*\}/);
-                    if (!jsonMatch) throw new Error("Kein gültiges JSON in der KI-Antwort gefunden.");
+                    if (!jsonMatch) throw new Error("Die KI hat kein erkennbares Format geliefert.");
                     const json = JSON.parse(jsonMatch[0]);
                     
                     setSelectedFood({ ...json, id: Date.now(), isAi: true, image: img });
