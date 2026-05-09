@@ -81,47 +81,56 @@
         const getFoodEmoji = (name = "") => {
             const n = name.toLowerCase();
             if (n.includes("pizza")) return "🍕";
-            if (n.includes("burger")) return "🍔";
-            if (n.includes("nudel") || n.includes("pasta") || n.includes("spaghetti")) return "🍝";
-            if (n.includes("salat")) return "🥗";
-            if (n.includes("apfel")) return "🍎";
+            if (n.includes("burger") || n.includes("pattie")) return "🍔";
+            if (n.includes("nudel") || n.includes("pasta") || n.includes("spaghetti") || n.includes("penne") || n.includes("fusilli")) return "🍝";
+            if (n.includes("salat") || n.includes("bowl")) return "🥗";
+            if (n.includes("apfel") || n.includes("apple")) return "🍎";
             if (n.includes("banane")) return "🍌";
-            if (n.includes("sushi")) return "🍣";
-            if (n.includes("döner") || n.includes("kebab") || n.includes("pita")) return "🥙";
-            if (n.includes("hähnchen") || n.includes("chicken")) return "🍗";
-            if (n.includes("steak") || n.includes("fleisch")) return "🥩";
-            if (n.includes("eis")) return "🍦";
-            if (n.includes("kaffee")) return "☕";
+            if (n.includes("sushi") || n.includes("maki")) return "🍣";
+            if (n.includes("döner") || n.includes("kebab") || n.includes("pita") || n.includes("gyros")) return "🥙";
+            if (n.includes("hähnchen") || n.includes("chicken") || n.includes("geflügel") || n.includes("pute")) return "🍗";
+            if (n.includes("steak") || n.includes("fleisch") || n.includes("rind") || n.includes("schwein")) return "🥩";
+            if (n.includes("eis") || n.includes("sorbet")) return "🍦";
+            if (n.includes("kaffee") || n.includes("espresso") || n.includes("cappuccino") || n.includes("latte")) return "☕";
             if (n.includes("tee")) return "🍵";
-            if (n.includes("wasser")) return "💧";
-            if (n.includes("cola") || n.includes("limo") || n.includes("fanta")) return "🥤";
-            if (n.includes("bier")) return "🍺";
-            if (n.includes("wein")) return "🍷";
-            if (n.includes("brot") || n.includes("brötchen")) return "🍞";
-            if (n.includes("ei ") || n.includes("eier") || n === "ei") return "🥚";
-            if (n.includes("milch")) return "🥛";
-            if (n.includes("gemüse") || n.includes("broccoli") || n.includes("gurke")) return "🥦";
-            if (n.includes("obst") || n.includes("frucht") || n.includes("beeren")) return "🍓";
-            if (n.includes("reis")) return "🍚";
-            if (n.includes("suppe")) return "🥣";
-            if (n.includes("kuchen") || n.includes("torte")) return "🍰";
-            if (n.includes("schoko")) return "🍫";
-            if (n.includes("käse")) return "🧀";
-            if (n.includes("fisch") || n.includes("lachs")) return "🐟";
-            if (n.includes("pommes")) return "🍟";
+            if (n.includes("wasser") || n.includes("sprudel")) return "💧";
+            if (n.includes("cola") || n.includes("limo") || n.includes("fanta") || n.includes("sprite") || n.includes("softdrink")) return "🥤";
+            if (n.includes("bier") || n.includes("pils") || n.includes("weizen")) return "🍺";
+            if (n.includes("wein") || n.includes("sekt")) return "🍷";
+            if (n.includes("brot") || n.includes("brötchen") || n.includes("semmel") || n.includes("weck") || n.includes("baguette") || n.includes("toast") || n.includes("ciabatta")) return "🍞";
+            if (n.includes("ei ") || n.includes("eier") || n === "ei" || n.includes("omelett") || n.includes("rührei")) return "🥚";
+            if (n.includes("milch") || n.includes("hafermilch") || n.includes("mandelmilch")) return "🥛";
+            if (n.includes("gemüse") || n.includes("broccoli") || n.includes("gurke") || n.includes("paprika") || n.includes("möhre") || n.includes("karotte")) return "🥦";
+            if (n.includes("obst") || n.includes("frucht") || n.includes("beeren") || n.includes("erdbeere") || n.includes("himbeere") || n.includes("blaubeere")) return "🍓";
+            if (n.includes("reis") || n.includes("risotto")) return "🍚";
+            if (n.includes("suppe") || n.includes("eintopf")) return "🥣";
+            if (n.includes("kuchen") || n.includes("torte") || n.includes("muffin") || n.includes("gebäck")) return "🍰";
+            if (n.includes("schoko") || n.includes("kakao")) return "🍫";
+            if (n.includes("käse") || n.includes("cheese") || n.includes("gouda") || n.includes("mozzarella")) return "🧀";
+            if (n.includes("fisch") || n.includes("lachs") || n.includes("thunfisch") || n.includes("garnele")) return "🐟";
+            if (n.includes("pommes") || n.includes("fritten")) return "🍟";
             if (n.includes("taco")) return "🌮";
-            if (n.includes("burrito")) return "🌯";
+            if (n.includes("burrito") || n.includes("wrap")) return "🌯";
             if (n.includes("popcorn")) return "🍿";
-            if (n.includes("pfannkuchen") || n.includes("pancake")) return "🥞";
+            if (n.includes("pfannkuchen") || n.includes("pancake") || n.includes("crepe")) return "🥞";
             if (n.includes("sandwich") || n.includes("toast")) return "🥪";
             if (n.includes("brezel") || n.includes("pretzel")) return "🥨";
             if (n.includes("hotdog") || n.includes("hot dog")) return "🌭";
-            if (n.includes("joghurt")) return "🍦";
-            if (n.includes("kartoffel")) return "🥔";
+            if (n.includes("joghurt") || n.includes("quark") || n.includes("skyr")) return "🍦";
+            if (n.includes("kartoffel") || n.includes("kloß")) return "🥔";
             if (n.includes("tomate")) return "🍅";
             if (n.includes("avocado")) return "🥑";
-            if (n.includes("nüsse") || n.includes("nuss")) return "🥜";
+            if (n.includes("nüsse") || n.includes("nuss") || n.includes("mandel") || n.includes("erdnuss")) return "🥜";
             if (n.includes("cookie") || n.includes("keks")) return "🍪";
+            if (n.includes("wurst") || n.includes("salami") || n.includes("schinken")) return "🌭";
+            if (n.includes("saft") || n.includes("smoothie")) return "🧃";
+            return "🍽️";
+        };
+
+        const getItemDisplay = (item, isLarge = false) => {
+            if (item.image) return <img src={item.image} className={`w-full h-full object-cover ${isLarge ? 'rounded-2xl' : 'rounded-xl'}`} />;
+            if (item.emoji) return item.emoji;
+            if (item.isBarcode) return getFoodEmoji(item.name);
             return "🍽️";
         };
 
@@ -342,7 +351,8 @@
                             fat: p.nutriments.fat_100g || 0,
                             saturatedFat: p.nutriments['saturated-fat_100g'] || 0,
                             unsaturatedFat: (p.nutriments.fat_100g || 0) - (p.nutriments['saturated-fat_100g'] || 0),
-                            image: p.image_front_small_url
+                            image: p.image_front_small_url,
+                            isBarcode: true
                         };
                         setSelectedFood(item);
                         const portion = p.serving_quantity ? Number(p.serving_quantity) : 100;
@@ -355,7 +365,7 @@
                 if (!user.geminiApiKey) return alert("Hinterlege deinen Key im Profil!");
                 setIsThinking(true);
                 try {
-                    const prompt = "Nährwerte/100g für: " + (text || "das Bild") + ". Gib NUR JSON zurück: {name(string), calories(int), protein(float), carbs(float), sugar(float), fat(float), saturatedFat(float), estimatedPortionWeight(int)}. Falls kein Essen erkannt wird, nutze name:'Unbekannt' and 0-Werte.";
+                    const prompt = "Nährwerte/100g für: " + (text || "das Bild") + ". Gib NUR JSON zurück: {name(string), calories(int), protein(float), carbs(float), sugar(float), fat(float), saturatedFat(float), estimatedPortionWeight(int), emoji(string)}. Wähle ein passendes Emoji aus. Falls kein Essen erkannt wird, nutze name:'Unbekannt' and 0-Werte.";
                     
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
@@ -412,6 +422,8 @@
                     baseCarbs, baseSugar,
                     baseFat, baseSaturatedFat,
                     baseUnsaturatedFat,
+                    emoji: food.emoji,
+                    isBarcode: food.isBarcode,
                     // Do not store images for AI scans in daily log to save space
                     image: food.isAi ? null : food.image
                 };
@@ -433,6 +445,8 @@
                             baseSaturatedFat,
                             baseUnsaturatedFat,
                             lastAmount: safeAmount,
+                            emoji: food.emoji,
+                            isBarcode: food.isBarcode,
                             // Do not store images for AI scanned items to save space
                             image: food.isAi ? null : food.image,
                             id: food.id || Date.now()
@@ -574,7 +588,7 @@
                                         <div className="space-y-2">
                                             <MacroBar label="🥑 Fett" value={totals.f} target={user.targetF} color="bg-amber-500" />
                                             <div className="space-y-1">
-                                                <SubMacroRow label="🧊 davon gesättigt" value={totals.sf} color="text-amber-700" />
+                                                <SubMacroRow label="⚠️ davon gesättigt" value={totals.sf} color="text-rose-500" />
                                                 <SubMacroRow label="🌱 ungesättigt" value={totals.uf} color="text-emerald-500" />
                                             </div>
                                         </div>
@@ -596,7 +610,7 @@
                                             <div key={item.instanceId} onClick={() => setShowDetails(item)} className="glass-card p-4 rounded-[1.8rem] flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer">
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-14 h-14 rounded-2xl bg-slate-800/50 flex items-center justify-center text-2xl border border-white/5 shadow-inner">
-                                                        {item.image ? <img src={item.image} className="w-full h-full rounded-2xl object-cover" /> : getFoodEmoji(item.name)}
+                                                        {getItemDisplay(item, true)}
                                                     </div>
                                                     <div><div className="font-bold text-white tracking-tight">{item.name}</div><div className="text-[10px] font-black text-slate-500 uppercase mt-0.5">{item.amountDisplay} <span className="mx-1">•</span> {Math.round(item.calories)} kcal</div></div>
                                                 </div>
@@ -689,7 +703,7 @@
                                                     className={`glass-card p-4 flex justify-between items-center active:scale-[0.98] transition-transform duration-300 relative z-10 cursor-pointer ${swipeId === item.name ? '-translate-x-24' : ''}`}
                                                 >
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center text-xl shadow-inner border border-white/5">{getFoodEmoji(item.name)}</div>
+                                                        <div className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center text-xl shadow-inner border border-white/5">{getItemDisplay(item)}</div>
                                                         <div><div className="font-bold text-sm text-white">{item.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{Math.round(item.baseCalories)} kcal / 100g</div></div>
                                                     </div>
                                                     <PlusIcon size={16} className="text-brand-400"/>
@@ -706,7 +720,7 @@
                                     <div key={f.id} onClick={() => selectFood(f)} className="glass-card p-4 rounded-[2rem] flex justify-between items-center animate-in zoom-in cursor-pointer active:scale-98">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-xl bg-slate-800/50 flex items-center justify-center text-xl border border-white/5 shadow-inner">
-                                                {f.image ? <img src={f.image} className="w-full h-full rounded-xl object-cover" /> : getFoodEmoji(f.name)}
+                                                {getItemDisplay(f)}
                                             </div>
                                             <div><div className="font-bold text-white">{f.name}</div><div className="text-[10px] font-black text-slate-500 uppercase">{Math.round(f.calories)} kcal / 100g</div></div>
                                         </div>
