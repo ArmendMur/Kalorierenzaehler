@@ -540,24 +540,33 @@
                                 <button onClick={() => setView('profile')} className="p-4 glass-card rounded-[1.5rem] border border-white/10 active:scale-90 transition-all shadow-lg"><UserIcon size={24} className="text-brand-400"/></button>
                             </div>
 
-                            <div className="glass-card rounded-[3rem] p-8 mb-8 shadow-2xl relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-40 h-40 bg-brand-500/10 blur-3xl -z-10"></div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 items-center">
+                            <div className="glass-card rounded-[3rem] p-6 sm:p-8 mb-8 shadow-2xl relative overflow-hidden">
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-brand-500/10 blur-3xl -z-10"></div>
+                                
+                                <div className="flex flex-col items-center mb-10">
                                     <ProgressRing consumed={totals.kcal} target={user.target} />
-                                    <div className="space-y-4">
-                                        <MacroBar label="💪 Protein" value={totals.p} target={user.targetP} color="bg-fuchsia-500" />
-                                        <div className="space-y-2">
-                                            <MacroBar label="🍞 Kohlenhydrate" value={totals.c} target={user.targetC} color="bg-blue-500" />
-                                            <div className="space-y-1">
-                                                <SubMacroRow label="🍭 davon Zucker" value={totals.s} color="text-blue-300" />
-                                            </div>
+                                </div>
+
+                                <div className="space-y-4 w-full">
+                                    {/* Protein Box */}
+                                    <div className="p-5 rounded-[1.8rem] bg-slate-900/60 border border-white/5 shadow-inner">
+                                        <MacroBar label="💪 Protein" value={totals.p} target={user.targetP} color="bg-fuchsia-400" />
+                                    </div>
+
+                                    {/* Carbs Box */}
+                                    <div className="p-5 rounded-[1.8rem] bg-slate-900/60 border border-white/5 shadow-inner space-y-4">
+                                        <MacroBar label="🍞 Kohlenhydrate" value={totals.c} target={user.targetC} color="bg-blue-400" />
+                                        <div className="pt-3 border-t border-white/10">
+                                            <SubMacroRow label="🍭 davon Zucker" value={totals.s} color="text-rose-400/60" />
                                         </div>
-                                        <div className="space-y-2">
-                                            <MacroBar label="🥑 Fett" value={totals.f} target={user.targetF} color="bg-amber-500" />
-                                            <div className="space-y-1">
-                                                <SubMacroRow label="⚠️ davon gesättigt" value={totals.sf} color="text-rose-500" />
-                                                <SubMacroRow label="🌱 ungesättigt" value={totals.uf} color="text-emerald-500" />
-                                            </div>
+                                    </div>
+
+                                    {/* Fat Box */}
+                                    <div className="p-5 rounded-[1.8rem] bg-slate-900/60 border border-white/5 shadow-inner space-y-4">
+                                        <MacroBar label="🥑 Fett" value={totals.f} target={user.targetF} color="bg-amber-400" />
+                                        <div className="pt-3 border-t border-white/10 space-y-2">
+                                            <SubMacroRow label="⚠️ davon gesättigt" value={totals.sf} color="text-rose-400/60" />
+                                            <SubMacroRow label="🌱 ungesättigt" value={totals.uf} color="text-emerald-400/60" />
                                         </div>
                                     </div>
                                 </div>
