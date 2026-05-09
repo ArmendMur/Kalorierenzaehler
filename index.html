@@ -57,7 +57,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo, useRef } = React;
+        const { useState, useEffect, useMemo, useRef, useCallback } = React;
         
         // --- ICONS ---
         const Icon = ({ d, size = 24, className = "", strokeWidth = "2.5" }) => (
@@ -78,57 +78,25 @@
         const LoaderIcon = (p) => <Icon d="M21 12a9 9 0 1 1-6.219-8.56" {...p} className="spinner" />;
 
         // --- HELPERS ---
+        const generateId = () => (typeof crypto !== 'undefined' && crypto.randomUUID) 
+            ? crypto.randomUUID() 
+            : Math.random().toString(36).substring(2, 15);
+
         const getFoodEmoji = (name = "") => {
             const n = name.toLowerCase();
-            if (n.includes("pizza")) return "🍕";
-            if (n.includes("burger") || n.includes("pattie")) return "🍔";
-            if (n.includes("nudel") || n.includes("pasta") || n.includes("spaghetti") || n.includes("penne") || n.includes("fusilli")) return "🍝";
-            if (n.includes("salat") || n.includes("bowl")) return "🥗";
-            if (n.includes("apfel") || n.includes("apple")) return "🍎";
-            if (n.includes("banane")) return "🍌";
-            if (n.includes("sushi") || n.includes("maki")) return "🍣";
-            if (n.includes("döner") || n.includes("kebab") || n.includes("pita") || n.includes("gyros")) return "🥙";
-            if (n.includes("hähnchen") || n.includes("chicken") || n.includes("geflügel") || n.includes("pute")) return "🍗";
-            if (n.includes("steak") || n.includes("fleisch") || n.includes("rind") || n.includes("schwein")) return "🥩";
-            if (n.includes("eis") || n.includes("sorbet")) return "🍦";
-            if (n.includes("kaffee") || n.includes("espresso") || n.includes("cappuccino") || n.includes("latte")) return "☕";
-            if (n.includes("tee")) return "🍵";
-            if (n.includes("wasser") || n.includes("sprudel")) return "💧";
-            if (n.includes("cola") || n.includes("limo") || n.includes("fanta") || n.includes("sprite") || n.includes("softdrink")) return "🥤";
-            if (n.includes("bier") || n.includes("pils") || n.includes("weizen")) return "🍺";
-            if (n.includes("wein") || n.includes("sekt")) return "🍷";
-            if (n.includes("brot") || n.includes("brötchen") || n.includes("semmel") || n.includes("weck") || n.includes("baguette") || n.includes("toast") || n.includes("ciabatta")) return "🍞";
-            if (n.includes("ei ") || n.includes("eier") || n === "ei" || n.includes("omelett") || n.includes("rührei")) return "🥚";
-            if (n.includes("milch") || n.includes("hafermilch") || n.includes("mandelmilch")) return "🥛";
-            if (n.includes("gemüse") || n.includes("broccoli") || n.includes("gurke") || n.includes("paprika") || n.includes("möhre") || n.includes("karotte")) return "🥦";
-            if (n.includes("obst") || n.includes("frucht") || n.includes("beeren") || n.includes("erdbeere") || n.includes("himbeere") || n.includes("blaubeere")) return "🍓";
-            if (n.includes("reis") || n.includes("risotto")) return "🍚";
-            if (n.includes("suppe") || n.includes("eintopf")) return "🥣";
-            if (n.includes("kuchen") || n.includes("torte") || n.includes("muffin") || n.includes("gebäck")) return "🍰";
-            if (n.includes("schoko") || n.includes("kakao")) return "🍫";
-            if (n.includes("käse") || n.includes("cheese") || n.includes("gouda") || n.includes("mozzarella")) return "🧀";
-            if (n.includes("fisch") || n.includes("lachs") || n.includes("thunfisch") || n.includes("garnele")) return "🐟";
-            if (n.includes("pommes") || n.includes("fritten")) return "🍟";
-            if (n.includes("taco")) return "🌮";
-            if (n.includes("burrito") || n.includes("wrap")) return "🌯";
-            if (n.includes("popcorn")) return "🍿";
-            if (n.includes("pfannkuchen") || n.includes("pancake") || n.includes("crepe")) return "🥞";
-            if (n.includes("sandwich") || n.includes("toast")) return "🥪";
-            if (n.includes("brezel") || n.includes("pretzel")) return "🥨";
-            if (n.includes("hotdog") || n.includes("hot dog")) return "🌭";
-            if (n.includes("joghurt") || n.includes("quark") || n.includes("skyr")) return "🍦";
-            if (n.includes("kartoffel") || n.includes("kloß")) return "🥔";
-            if (n.includes("tomate")) return "🍅";
-            if (n.includes("avocado")) return "🥑";
-            if (n.includes("nüsse") || n.includes("nuss") || n.includes("mandel") || n.includes("erdnuss")) return "🥜";
-            if (n.includes("cookie") || n.includes("keks")) return "🍪";
-            if (n.includes("wurst") || n.includes("salami") || n.includes("schinken")) return "🌭";
-            if (n.includes("saft") || n.includes("smoothie")) return "🧃";
+            const mappings = {
+                pizza: "🍕", burger: "🍔", nudel: "🍝", salat: "🥗", apfel: "🍎", banane: "🍌", 
+                sushi: "🍣", döner: "🥙", hähnchen: "🍗", steak: "🥩", eis: "🍦", kaffee: "☕", 
+                wasser: "💧", cola: "🥤", bier: "🍺", brot: "🍞", ei: "🥚", milch: "🥛"
+            };
+            for (const [key, emoji] of Object.entries(mappings)) {
+                if (n.includes(key)) return emoji;
+            }
             return "🍽️";
         };
 
         const getItemDisplay = (item, isLarge = false) => {
-            if (item.image) return <img src={item.image} className={`w-full h-full object-cover ${isLarge ? 'rounded-2xl' : 'rounded-xl'}`} />;
+            if (item.image) return <img src={item.image} alt={item.name} loading="lazy" className={`w-full h-full object-cover ${isLarge ? 'rounded-2xl' : 'rounded-xl'}`} />;
             if (item.emoji) return item.emoji;
             if (item.isBarcode) return getFoodEmoji(item.name);
             return "🍽️";
@@ -141,7 +109,7 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800;
+                        const MAX_WIDTH = 800; 
                         const scale = MAX_WIDTH / img.width;
                         canvas.width = MAX_WIDTH;
                         canvas.height = img.height * scale;
@@ -156,7 +124,7 @@
         };
 
         // --- COMPONENTS ---
-        const ProgressRing = ({ consumed, target }) => {
+        const ProgressRing = React.memo(({ consumed, target }) => {
             const radius = 80;
             const normRadius = radius - 12;
             const circ = normRadius * 2 * Math.PI;
@@ -177,7 +145,7 @@
                     </div>
                 </div>
             );
-        };
+        });
 
         const MacroBar = ({ label, value, target, color }) => {
             const percent = Math.min(100, (value / (target || 1)) * 100) || 0;
@@ -194,24 +162,50 @@
             );
         };
 
-        const SubMacroRow = ({ label, value }) => (
+        const SubMacroRow = ({ label, value, color }) => (
             <div className="flex justify-between items-center px-1">
-                <span className="text-[8px] font-black uppercase tracking-wider text-slate-600">{label}</span>
+                <span className={`text-[8px] font-black uppercase tracking-wider ${color}`}>{label}</span>
                 <span className="text-[10px] font-bold text-white">{Math.round(value)}g</span>
+            </div>
+        );
+
+        const GoalInput = ({ label, value, color, onChange }) => (
+            <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] block px-1">{label}</label>
+                <input 
+                    type="number" 
+                    value={value || 0} 
+                    onChange={e => onChange(Number(e.target.value))} 
+                    className={`w-full p-5 bg-slate-900 border border-white/5 rounded-2xl font-black text-xl outline-none focus:ring-2 focus:ring-brand-500/50 shadow-inner ${color}`} 
+                />
             </div>
         );
 
         // --- MAIN APP ---
         function App() {
-            const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('kTrackUser')) || { target: 2000, targetP: 150, targetC: 250, targetF: 70, targetS: 50, geminiApiKey: '' });
-            const [view, setView] = useState('dashboard');
-            const [dailyLog, setDailyLog] = useState(() => {
-                const saved = JSON.parse(localStorage.getItem('kTrackLog'));
-                const today = new Date().toISOString().split('T')[0];
-                return (saved && saved.date === today) ? saved : { date: today, items: [] };
+            const [user, setUser] = useState(() => {
+                const saved = localStorage.getItem('kTrackUser');
+                return (saved && saved !== "null") ? JSON.parse(saved) : { target: 2000, targetP: 150, targetC: 250, targetF: 70, targetS: 50, geminiApiKey: '' };
             });
-            const [itemHistory, setItemHistory] = useState(() => JSON.parse(localStorage.getItem('kTrackHistory')) || []);
             
+            const [dailyLog, setDailyLog] = useState(() => {
+                const savedRaw = localStorage.getItem('kTrackLog');
+                const saved = (savedRaw && savedRaw !== "null") ? JSON.parse(savedRaw) : null;
+                const today = new Date().toISOString().split('T')[0];
+                return (saved && saved.date === today && Array.isArray(saved.items)) ? saved : { date: today, items: [] };
+            });
+
+            const [itemHistory, setItemHistory] = useState(() => {
+                const savedRaw = localStorage.getItem('kTrackHistory');
+                const saved = (savedRaw && savedRaw !== "null") ? JSON.parse(savedRaw) : null;
+                return Array.isArray(saved) ? saved : [];
+            });
+
+            useEffect(() => { localStorage.setItem('kTrackUser', JSON.stringify(user)); }, [user]);
+            useEffect(() => { localStorage.setItem('kTrackLog', JSON.stringify(dailyLog)); }, [dailyLog]);
+            useEffect(() => { localStorage.setItem('kTrackHistory', JSON.stringify(itemHistory)); }, [itemHistory]);
+
+            const [view, setView] = useState('dashboard');
             const [searchQuery, setSearchQuery] = useState('');
             const [apiResults, setApiResults] = useState([]);
             const [isSearching, setIsSearching] = useState(false);
@@ -220,29 +214,30 @@
             const [selectedFood, setSelectedFood] = useState(null);
             const [editingInstanceId, setEditingInstanceId] = useState(null);
             const [showDetails, setShowDetails] = useState(null);
-            
             const [amount, setAmount] = useState(100);
+            
             const [aiImage, setAiImage] = useState(null);
             const [aiDesc, setAiDesc] = useState('');
             const [showAiModal, setShowAiModal] = useState(false);
             const [showSuccess, setShowSuccess] = useState(false);
             const [swipeId, setSwipeId] = useState(null);
-            const touchStart = useRef(0);
 
             const aiFileRef = useRef();
             const qrInstance = useRef(null);
             const searchInputRef = useRef(null);
+            const touchStart = useRef(0);
 
-            // LOCAL SEARCH LOGIC
-            const triggerSearch = async () => {
-                if (searchQuery.length < 1) return;
+            const triggerSearch = useCallback(() => {
+                if (searchQuery.trim().length < 1) return;
                 setIsSearching(true);
                 const query = searchQuery.toLowerCase();
-                const results = itemHistory
-                    .filter(item => typeof item === 'object' && item !== null && item.name.toLowerCase().includes(query))
+                const safeHistory = Array.isArray(itemHistory) ? itemHistory : [];
+                
+                const results = safeHistory
+                    .filter(item => item?.name?.toLowerCase().includes(query))
                     .map(item => ({
                         ...item,
-                        id: item.id || Math.random(),
+                        id: item.id || generateId(),
                         calories: Number(item.baseCalories ?? item.calories ?? 0),
                         protein: Number(item.baseProtein ?? item.protein ?? 0),
                         carbs: Number(item.baseCarbs ?? item.carbs ?? 0),
@@ -253,7 +248,7 @@
                     }));
                 setApiResults(results);
                 setIsSearching(false);
-            };
+            }, [searchQuery, itemHistory]);
 
             const handleAiTextClick = () => {
                 if (searchQuery.length < 2) {
@@ -264,20 +259,15 @@
             };
 
             useEffect(() => {
-                if (searchQuery.length < 1) {
+                if (searchQuery.trim().length < 1) {
                     setApiResults([]);
                     setIsSearching(false);
                     return;
                 }
                 const timeout = setTimeout(triggerSearch, 300);
                 return () => clearTimeout(timeout);
-            }, [searchQuery]);
+            }, [searchQuery, triggerSearch]);
 
-            useEffect(() => { localStorage.setItem('kTrackUser', JSON.stringify(user)); }, [user]);
-            useEffect(() => { localStorage.setItem('kTrackLog', JSON.stringify(dailyLog)); }, [dailyLog]);
-            useEffect(() => { localStorage.setItem('kTrackHistory', JSON.stringify(itemHistory)); }, [itemHistory]);
-
-            // BODY SCROLL LOCK: Fixes hit-testing issues on mobile
             useEffect(() => {
                 const isModalOpen = !!(selectedFood || showAiModal || showDetails || isScanning);
                 document.body.style.overflow = isModalOpen ? 'hidden' : '';
@@ -294,32 +284,20 @@
                 setTimeout(fn, 100);
             };
 
-            const totals = useMemo(() => dailyLog.items.reduce((acc, i) => ({
-                kcal: acc.kcal + (Number(i.calories) || 0),
-                p: acc.p + (Number(i.protein) || 0),
-                c: acc.c + (Number(i.carbs) || 0),
-                s: acc.s + (Number(i.sugar) || 0),
-                f: acc.f + (Number(i.fat) || 0),
-                sf: acc.sf + (Number(i.saturatedFat) || 0),
-                uf: acc.uf + (Number(i.unsaturatedFat) || 0)
-            }), { kcal: 0, p: 0, c: 0, s: 0, f: 0, sf: 0, uf: 0 }), [dailyLog]);
+            const totals = useMemo(() => {
+                const items = Array.isArray(dailyLog?.items) ? dailyLog.items : [];
+                return items.reduce((acc, i) => ({
+                    kcal: acc.kcal + (Number(i.calories) || 0),
+                    p: acc.p + (Number(i.protein) || 0),
+                    c: acc.c + (Number(i.carbs) || 0),
+                    s: acc.s + (Number(i.sugar) || 0),
+                    f: acc.f + (Number(i.fat) || 0),
+                    sf: acc.sf + (Number(i.saturatedFat) || 0),
+                    uf: acc.uf + (Number(i.unsaturatedFat) || 0)
+                }), { kcal: 0, p: 0, c: 0, s: 0, f: 0, sf: 0, uf: 0 });
+            }, [dailyLog]);
 
-            const frequentItems = useMemo(() => {
-                return itemHistory
-                    .filter(item => typeof item === 'object' && item !== null)
-                    .map(item => ({
-                        ...item,
-                        // Ensure both base and standard keys exist to prevent NaN in modal/list
-                        calories: Number(item.baseCalories ?? item.calories ?? 0),
-                        protein: Number(item.baseProtein ?? item.protein ?? 0),
-                        carbs: Number(item.baseCarbs ?? item.carbs ?? 0),
-                        sugar: Number(item.baseSugar ?? item.sugar ?? 0),
-                        fat: Number(item.baseFat ?? item.fat ?? 0),
-                        saturatedFat: Number(item.baseSaturatedFat ?? item.saturatedFat ?? 0),
-                        unsaturatedFat: Number(item.baseUnsaturatedFat ?? item.unsaturatedFat ?? 0),
-                    }))
-                    .slice(0, 5);
-            }, [itemHistory]);
+            const frequentItems = useMemo(() => (Array.isArray(itemHistory) ? itemHistory : []).slice(0, 5), [itemHistory]);
 
             const startBarcodeScan = () => {
                 setIsScanning(true);
@@ -328,12 +306,16 @@
                     qrInstance.current.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
                         fetchBarcode(text);
                         stopBarcodeScan();
-                    }, () => {}).catch(() => { alert("Kamera-Fehler"); setIsScanning(false); });
+                    }, () => {}).catch(() => { alert("Kamera-Fehler. Berechtigung erteilt?"); setIsScanning(false); });
                 }, 300);
             };
 
             const stopBarcodeScan = () => {
-                if(qrInstance.current) { qrInstance.current.stop().then(() => { qrInstance.current.clear(); setIsScanning(false); }).catch(() => setIsScanning(false)); }
+                if(qrInstance.current) { 
+                    qrInstance.current.stop()
+                        .then(() => { qrInstance.current.clear(); setIsScanning(false); })
+                        .catch(() => setIsScanning(false)); 
+                }
             };
 
             const fetchBarcode = async (code) => {
@@ -355,17 +337,20 @@
                             isBarcode: true
                         };
                         setSelectedFood(item);
-                        const portion = p.serving_quantity ? Number(p.serving_quantity) : 100;
-                        setAmount(portion);
+                        setAmount(Number(p.serving_quantity) || 100);
                     } else { alert("Produkt nicht gefunden."); }
-                } catch (e) { alert("Barcode Fehler."); }
+                } catch (e) { alert("Barcode Fehler: Keine Verbindung."); }
             };
 
+            // HIER IST DER GEFIXTE BEREICH (Zurück zu deiner Regex-Methode)
             const askGemini = async (text, img = null) => {
-                if (!user.geminiApiKey) return alert("Hinterlege deinen Key im Profil!");
+                if (!user.geminiApiKey) return alert("Bitte hinterlege deinen API Key im Profil!");
                 setIsThinking(true);
                 try {
-                    const prompt = "Nährwerte/100g für: " + (text || "das Bild") + ". Gib NUR JSON zurück: {name(string), calories(int), protein(float), carbs(float), sugar(float), fat(float), saturatedFat(float), estimatedPortionWeight(int), emoji(string)}. Wähle ein passendes Emoji aus. Falls kein Essen erkannt wird, nutze name:'Unbekannt' and 0-Werte.";
+                    const prompt = `Nährwerte pro 100g für: ${text || "das Bild"}. 
+                    Schätze bei 'estimatedPortionWeight' das Gewicht der GESAMTEN sichtbaren Portion auf dem Bild ab (z.B. eine ganze Pizza = 400-500g, nicht nur ein Stück).
+                    Gib AUSSCHLIESSLICH valides JSON zurück. Keine Formatierungen.
+                    Format: {"name":"string", "calories":int, "protein":float, "carbs":float, "sugar":float, "fat":float, "saturatedFat":float, "estimatedPortionWeight":int, "emoji":"string"}`;
                     
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
@@ -373,18 +358,21 @@
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${user.geminiApiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents })
+                        body: JSON.stringify({ contents }) 
                     });
                     const data = await res.json();
                     if(data.error) throw new Error(data.error.message);
                     
+                    // Deine alte, extrem robuste Regex-Methode für JSON
                     const textContent = data.candidates[0].content.parts[0].text;
                     const jsonMatch = textContent.match(/\{[\s\S]*\}/);
                     if (!jsonMatch) throw new Error("Die KI hat kein erkennbares Format geliefert.");
+                    
                     const json = JSON.parse(jsonMatch[0]);
                     
-                    setSelectedFood({ ...json, id: Date.now(), isAi: true, image: img });
+                    setSelectedFood({ ...json, id: generateId(), isAi: true, image: img });
                     if (json.estimatedPortionWeight) setAmount(json.estimatedPortionWeight);
+                    
                     setShowAiModal(false); setAiImage(null); setAiDesc('');
                 } catch (e) { alert("KI Fehler: " + e.message); }
                 finally { setIsThinking(false); }
@@ -393,72 +381,6 @@
             const selectFood = (food) => {
                 setSelectedFood(food);
                 setAmount(food.lastAmount || 100);
-            };
-
-            const addEntry = (food) => {
-                const safeAmount = Number(amount) || 0;
-                const factor = safeAmount / 100;
-                
-                const baseCalories = Number(food.baseCalories ?? food.calories ?? 0);
-                const baseProtein = Number(food.baseProtein ?? food.protein ?? 0);
-                const baseCarbs = Number(food.baseCarbs ?? food.carbs ?? 0);
-                const baseSugar = Number(food.baseSugar ?? food.sugar ?? 0);
-                const baseFat = Number(food.baseFat ?? food.fat ?? 0);
-                const baseSaturatedFat = Number(food.baseSaturatedFat ?? food.saturatedFat ?? 0);
-                const baseUnsaturatedFat = Number(food.baseUnsaturatedFat ?? food.unsaturatedFat ?? (baseFat - baseSaturatedFat));
-
-                const entry = { 
-                    name: food.name,
-                    instanceId: editingInstanceId || Date.now(),
-                    calories: Math.round(baseCalories * factor),
-                    protein: baseProtein * factor, 
-                    carbs: baseCarbs * factor,
-                    sugar: baseSugar * factor, 
-                    fat: baseFat * factor,
-                    saturatedFat: baseSaturatedFat * factor,
-                    unsaturatedFat: baseUnsaturatedFat * factor,
-                    amountFactor: factor, amountDisplay: `${safeAmount}g`,
-                    baseCalories, baseProtein,
-                    baseCarbs, baseSugar,
-                    baseFat, baseSaturatedFat,
-                    baseUnsaturatedFat,
-                    emoji: food.emoji,
-                    isBarcode: food.isBarcode,
-                    // Do not store images for AI scans in daily log to save space
-                    image: food.isAi ? null : food.image
-                };
-                
-                if (editingInstanceId) {
-                    setDailyLog(prev => ({ ...prev, items: prev.items.map(i => i.instanceId === editingInstanceId ? entry : i) }));
-                } else {
-                    setDailyLog(prev => ({ ...prev, items: [...prev.items, entry] }));
-                    
-                    setItemHistory(prev => {
-                        const filtered = prev.filter(i => typeof i === 'object' && i !== null && i.name !== food.name);
-                        return [{
-                            name: food.name,
-                            baseCalories,
-                            baseProtein,
-                            baseCarbs,
-                            baseSugar,
-                            baseFat,
-                            baseSaturatedFat,
-                            baseUnsaturatedFat,
-                            lastAmount: safeAmount,
-                            emoji: food.emoji,
-                            isBarcode: food.isBarcode,
-                            // Do not store images for AI scanned items to save space
-                            image: food.isAi ? null : food.image,
-                            id: food.id || Date.now()
-                        }, ...filtered].slice(0, 50); 
-                    });
-                }
-                
-                setShowSuccess(true);
-                setTimeout(() => setShowSuccess(false), 1500);
-                
-                setView('dashboard');
-                setSearchQuery(''); setApiResults([]); setSelectedFood(null); setEditingInstanceId(null); setAmount(100);
             };
 
             const openEdit = (item) => {
@@ -478,17 +400,60 @@
                 setShowDetails(null);
             };
 
+            const addEntry = useCallback((food) => {
+                const safeAmount = Number(amount) || 0;
+                const factor = safeAmount / 100;
+                
+                const baseProps = {
+                    calories: Number(food.baseCalories ?? food.calories ?? 0),
+                    protein: Number(food.baseProtein ?? food.protein ?? 0),
+                    carbs: Number(food.baseCarbs ?? food.carbs ?? 0),
+                    sugar: Number(food.baseSugar ?? food.sugar ?? 0),
+                    fat: Number(food.baseFat ?? food.fat ?? 0),
+                    saturatedFat: Number(food.baseSaturatedFat ?? food.saturatedFat ?? 0)
+                };
+                baseProps.unsaturatedFat = Number(food.baseUnsaturatedFat ?? food.unsaturatedFat ?? (baseProps.fat - baseProps.saturatedFat));
+
+                const entry = { 
+                    name: food.name,
+                    instanceId: editingInstanceId || generateId(),
+                    amountFactor: factor, 
+                    amountDisplay: `${safeAmount}g`,
+                    emoji: food.emoji,
+                    isBarcode: food.isBarcode,
+                    image: food.isAi ? null : food.image,
+                    ...Object.fromEntries(Object.entries(baseProps).map(([k, v]) => [k, v * factor])),
+                    baseCalories: baseProps.calories, baseProtein: baseProps.protein, baseCarbs: baseProps.carbs,
+                    baseSugar: baseProps.sugar, baseFat: baseProps.fat, baseSaturatedFat: baseProps.saturatedFat, baseUnsaturatedFat: baseProps.unsaturatedFat
+                };
+                
+                if (editingInstanceId) {
+                    setDailyLog(prev => ({ ...prev, items: (prev.items || []).map(i => i.instanceId === editingInstanceId ? entry : i) }));
+                } else {
+                    setDailyLog(prev => ({ ...prev, items: [...(prev.items || []), entry] }));
+                    setItemHistory(prev => {
+                        const safePrev = Array.isArray(prev) ? prev : [];
+                        const filtered = safePrev.filter(i => i?.name !== food.name);
+                        return [{ ...entry, lastAmount: safeAmount, id: generateId() }, ...filtered].slice(0, 50); 
+                    });
+                }
+                
+                setShowSuccess(true);
+                setTimeout(() => setShowSuccess(false), 1500);
+                
+                setView('dashboard');
+                setSearchQuery(''); setApiResults([]); setSelectedFood(null); setEditingInstanceId(null); setAmount(100);
+            }, [amount, editingInstanceId, setDailyLog, setItemHistory]);
+
             return (
                 <div className="max-w-md mx-auto min-h-screen bg-slate-950 text-slate-100 p-6 pb-24 relative overflow-hidden">
                     
-                    {/* SUCCESS OVERLAY */}
                     {showSuccess && (
                         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[300] bg-brand-500 text-slate-950 px-8 py-4 rounded-full font-black flex items-center gap-3 shadow-2xl animate-success-fade">
-                            <CheckIcon size={24} /> Eintragen erfolgreich!
+                            <CheckIcon size={24} /> Gespeichert!
                         </div>
                     )}
 
-                    {/* MODAL: DETAILS */}
                     {showDetails && (
                         <div className="fixed inset-0 bg-slate-950/95 z-[200] flex items-center justify-center p-6 backdrop-blur-xl animate-in zoom-in duration-200">
                             <div className="w-full glass-card rounded-[3rem] p-8 space-y-6 overscroll-contain">
@@ -513,7 +478,6 @@
                         </div>
                     )}
 
-                    {/* MODAL: QUANTITY & STEPPER & LIVE NUTRITION */}
                     {selectedFood && (
                         <>
                             <div className="fixed inset-0 bg-slate-950/90 z-[450] backdrop-blur-sm animate-in fade-in duration-300" onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}}></div>
@@ -569,7 +533,6 @@
                         </>
                     )}
 
-                    {/* DASHBOARD */}
                     {view === 'dashboard' && (
                         <div className="animate-in fade-in duration-500">
                             <div className="flex justify-between items-center mb-8 mt-4">
@@ -583,8 +546,12 @@
                                     <ProgressRing consumed={totals.kcal} target={user.target} />
                                     <div className="space-y-4">
                                         <MacroBar label="💪 Protein" value={totals.p} target={user.targetP} color="bg-fuchsia-500" />
-                                        <MacroBar label="🍞 Kohlenhydrate" value={totals.c} target={user.targetC} color="bg-blue-500" />
-                                        <MacroBar label="🍭 Zucker" value={totals.s} target={user.targetS} color="bg-blue-300" />
+                                        <div className="space-y-2">
+                                            <MacroBar label="🍞 Kohlenhydrate" value={totals.c} target={user.targetC} color="bg-blue-500" />
+                                            <div className="space-y-1">
+                                                <SubMacroRow label="🍭 davon Zucker" value={totals.s} color="text-blue-300" />
+                                            </div>
+                                        </div>
                                         <div className="space-y-2">
                                             <MacroBar label="🥑 Fett" value={totals.f} target={user.targetF} color="bg-amber-500" />
                                             <div className="space-y-1">
@@ -603,7 +570,7 @@
                             <div className="space-y-4">
                                 <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-4">📅 Tagebuch</h3>
                                 <div className="space-y-3">
-                                    {dailyLog.items.length === 0 ? (
+                                    {(!dailyLog.items || dailyLog.items.length === 0) ? (
                                         <div className="py-16 text-center opacity-30 italic text-sm">Keine Einträge heute</div>
                                     ) : (
                                         [...dailyLog.items].reverse().map(item => (
@@ -623,7 +590,6 @@
                         </div>
                     )}
 
-                    {/* VIEW: ADD FOOD */}
                     {view === 'addFood' && (
                         <div className="animate-in slide-in-from-bottom duration-300 p-2">
                             <div className="flex items-center gap-4 mb-10 mt-4">
@@ -670,7 +636,6 @@
                                 }} />
                             </div>
 
-                            {/* FAVS */}
                             {!searchQuery && apiResults.length === 0 && (
                                 <div className="space-y-4">
                                     <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-2">⭐ Häufig gegessen</h3>
@@ -686,10 +651,9 @@
                                                     if (delta < -80) setSwipeId(null);
                                                 }}
                                             >
-                                                {/* SUBTLE DELETE BACKGROUND */}
                                                 <div 
                                                     onClick={() => {
-                                                        setItemHistory(prev => prev.filter(i => i.name !== item.name));
+                                                        setItemHistory(prev => (Array.isArray(prev) ? prev : []).filter(i => i.name !== item.name));
                                                         setSwipeId(null);
                                                     }}
                                                     className="absolute inset-y-0 right-0 w-24 bg-slate-800/80 flex items-center justify-center text-rose-400 font-black uppercase text-[9px] tracking-widest border-l border-white/5"
@@ -697,7 +661,6 @@
                                                     <TrashIcon size={14} className="mr-1"/> Löschen
                                                 </div>
                                                 
-                                                {/* CARD CONTENT */}
                                                 <div 
                                                     onClick={() => selectFood(item)} 
                                                     className={`glass-card p-4 flex justify-between items-center active:scale-[0.98] transition-transform duration-300 relative z-10 cursor-pointer ${swipeId === item.name ? '-translate-x-24' : ''}`}
@@ -714,7 +677,6 @@
                                 </div>
                             )}
 
-                            {/* SEARCH RESULTS */}
                             <div className="space-y-3 mt-4">
                                 {apiResults.map(f => (
                                     <div key={f.id} onClick={() => selectFood(f)} className="glass-card p-4 rounded-[2rem] flex justify-between items-center animate-in zoom-in cursor-pointer active:scale-98">
@@ -731,7 +693,6 @@
                         </div>
                     )}
 
-                    {/* MODAL: AI PHOTO DESCRIPTION */}
                     {showAiModal && (
                         <>
                             <div className="fixed inset-0 bg-slate-950/95 z-[400] backdrop-blur-xl animate-in fade-in duration-300" onClick={() => {setShowAiModal(false); setAiImage(null);}}></div>
@@ -760,7 +721,6 @@
                         </>
                     )}
 
-                    {/* VIEW: PROFILE */}
                     {view === 'profile' && (
                         <div className="animate-in slide-in-from-right duration-300">
                             <div className="flex items-center gap-4 mb-10 mt-4">
@@ -772,8 +732,9 @@
                                 <div className="grid grid-cols-2 gap-4">
                                     <GoalInput label="💪 Protein (g)" value={user.targetP} color="text-fuchsia-400" onChange={v => setUser({...user, targetP: v})} />
                                     <GoalInput label="🍞 Kohlenhydrate (g)" value={user.targetC} color="text-blue-400" onChange={v => setUser({...user, targetC: v})} />
-                                    <GoalInput label="🥑 Fett (g)" value={user.targetF} color="text-amber-400" onChange={v => setUser({...user, targetF: v})} />
-                                    <GoalInput label="🍭 Zucker (g)" value={user.targetS} color="text-blue-300" onChange={v => setUser({...user, targetS: v})} />
+                                    <div className="col-span-2">
+                                        <GoalInput label="🥑 Fett (g)" value={user.targetF} color="text-amber-400" onChange={v => setUser({...user, targetF: v})} />
+                                    </div>
                                 </div>
                                 <div className="pt-8 border-t border-white/5 space-y-2">
                                     <label className="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest block mb-2 px-1">Gemini API Key</label>
@@ -784,7 +745,6 @@
                         </div>
                     )}
 
-                    {/* BARCODE SCANNER MODAL */}
                     {isScanning && (
                         <div className="fixed inset-0 bg-slate-950 z-[300] flex flex-col items-center justify-center p-6 backdrop-blur-3xl animate-in zoom-in duration-300">
                             <div className="w-full max-w-md glass-card rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl">
@@ -801,18 +761,6 @@
                 </div>
             );
         }
-
-        const GoalInput = ({ label, value, color, onChange }) => (
-            <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] block px-1">{label}</label>
-                <input 
-                    type="number" 
-                    value={value || 0} 
-                    onChange={e => onChange(Number(e.target.value))} 
-                    className={`w-full p-5 bg-slate-900 border border-white/5 rounded-2xl font-black text-xl outline-none focus:ring-2 focus:ring-brand-500/50 shadow-inner ${color}`} 
-                />
-            </div>
-        );
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
