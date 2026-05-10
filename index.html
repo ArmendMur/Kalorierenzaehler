@@ -347,9 +347,10 @@
                 if (!user.geminiApiKey) return alert("Bitte hinterlege deinen API Key im Profil!");
                 setIsThinking(true);
                 try {
-                    const prompt = `Nährwerte pro 100g für: ${text || "das Bild"}. 
-                    Schätze bei 'estimatedPortionWeight' das Gewicht der GESAMTEN sichtbaren Portion auf dem Bild ab (z.B. eine ganze Pizza = 400-500g, nicht nur ein Stück).
-                    Gib AUSSCHLIESSLICH valides JSON zurück. Keine Formatierungen.
+                    const prompt = `Analysiere folgendes Essen (Bild und/oder Text): ${text || "das Bild"}. 
+                    WICHTIGE REGEL: Wenn mehrere verschiedene Lebensmittel zu sehen oder beschrieben sind, fasse sie ZWINGEND zu EINEM EINZIGEN Eintrag zusammen (Nenne es z.B. "Gemischter Teller", "Bowl" oder zähle die Hauptzutaten auf) und berechne die durchschnittlichen Nährwerte pro 100g für diese Gesamtmischung.
+                    Schätze bei 'estimatedPortionWeight' das Gewicht der GESAMTEN sichtbaren Portion ab.
+                    Gib AUSSCHLIESSLICH ein einziges, valides JSON-Objekt zurück. Gib NIEMALS ein Array [] oder eine Liste zurück. Keine Formatierungen.
                     Format: {"name":"string", "calories":int, "protein":float, "carbs":float, "sugar":float, "fat":float, "saturatedFat":float, "estimatedPortionWeight":int, "emoji":"string"}`;
                     
                     let contents = [{ parts: [{ text: prompt }] }];
