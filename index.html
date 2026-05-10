@@ -348,9 +348,10 @@
                 setIsThinking(true);
                 try {
                     const prompt = `Analysiere folgendes Essen (Bild und/oder Text): ${text || "das Bild"}. 
-                    WICHTIGE REGEL: Wenn mehrere verschiedene Lebensmittel zu sehen oder beschrieben sind, fasse sie ZWINGEND zu EINEM EINZIGEN Eintrag zusammen (Nenne es z.B. "Gemischter Teller", "Bowl" oder zähle die Hauptzutaten auf) und berechne die durchschnittlichen Nährwerte pro 100g für diese Gesamtmischung.
-                    Schätze bei 'estimatedPortionWeight' das Gewicht der GESAMTEN sichtbaren Portion ab.
-                    Gib AUSSCHLIESSLICH ein einziges, valides JSON-Objekt zurück. Gib NIEMALS ein Array [] oder eine Liste zurück. Keine Formatierungen.
+                    WICHTIGSTE REGEL: Gib IMMER und AUSNAHMSLOS die Nährwerte für exakt 100 Gramm an! Auch wenn der Text "ein ganzes Hähnchen", "eine große Pizza" oder "500g" lautet oder das Bild eine riesige Portion zeigt – rechne die Makros ZWINGEND auf 100g herunter.
+                    Schätze bei 'estimatedPortionWeight' das Gewicht der GESAMTEN beschriebenen/sichtbaren Portion ab (z.B. halbes Hähnchen = 400).
+                    Wenn mehrere Lebensmittel erkennbar sind, fasse sie zu EINEM Gericht zusammen und nenne die Durchschnittswerte pro 100g der Mischung.
+                    Gib AUSSCHLIESSLICH ein einziges, valides JSON-Objekt zurück.
                     Format: {"name":"string", "calories":int, "protein":float, "carbs":float, "sugar":float, "fat":float, "saturatedFat":float, "estimatedPortionWeight":int, "emoji":"string"}`;
                     
                     let contents = [{ parts: [{ text: prompt }] }];
