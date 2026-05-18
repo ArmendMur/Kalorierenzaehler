@@ -541,7 +541,19 @@
                                                 const input = prompt("Wähle ein Emoji:", selectedFood.emoji || "🍽️");
                                                 if (input) {
                                                     const newEmoji = [...input.trim()][0];
-                                                    setSelectedFood({...selectedFood, emoji: newEmoji});
+                                                    setSelectedFood(prev => ({...prev, emoji: newEmoji}));
+                                                    
+                                                    // Sofort im Tagebuch synchronisieren
+                                                    setDailyLog(prev => ({
+                                                        ...prev,
+                                                        items: (prev.items || []).map(item => item.name === selectedFood.name ? { ...item, emoji: newEmoji } : item)
+                                                    }));
+                                                    
+                                                    // Sofort in der Historie synchronisieren
+                                                    setItemHistory(prev => {
+                                                        const safePrev = Array.isArray(prev) ? prev : [];
+                                                        return safePrev.map(i => i.name === selectedFood.name ? { ...i, emoji: newEmoji } : i);
+                                                    });
                                                 }
                                             }}
                                             className="w-14 h-14 bg-slate-800/80 rounded-[1.2rem] flex items-center justify-center text-3xl border border-white/10 shadow-inner hover:bg-slate-700 transition-colors"
