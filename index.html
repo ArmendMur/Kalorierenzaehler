@@ -473,6 +473,11 @@
                 
                 if (editingInstanceId) {
                     setDailyLog(prev => ({ ...prev, items: (prev.items || []).map(i => i.instanceId === editingInstanceId ? entry : i) }));
+                    // Update emoji in history as well if it was edited
+                    setItemHistory(prev => {
+                        const safePrev = Array.isArray(prev) ? prev : [];
+                        return safePrev.map(i => i.name === food.name ? { ...i, emoji: food.emoji } : i);
+                    });
                 } else {
                     setDailyLog(prev => ({ ...prev, items: [...(prev.items || []), entry] }));
                     setItemHistory(prev => {
