@@ -82,23 +82,10 @@
             ? crypto.randomUUID() 
             : Math.random().toString(36).substring(2, 15);
 
-        const getFoodEmoji = (name = "") => {
-            const n = name.toLowerCase();
-            const mappings = {
-                pizza: "🍕", burger: "🍔", nudel: "🍝", salat: "🥗", apfel: "🍎", banane: "🍌", 
-                sushi: "🍣", döner: "🥙", hähnchen: "🍗", steak: "🥩", eis: "🍦", kaffee: "☕", 
-                wasser: "💧", cola: "🥤", bier: "🍺", brot: "🍞", ei: "🥚", milch: "🥛"
-            };
-            for (const [key, emoji] of Object.entries(mappings)) {
-                if (n.includes(key)) return emoji;
-            }
-            return "🍽️";
-        };
-
         const getItemDisplay = (item, isLarge = false) => {
             if (item.emoji) return <div className={`flex items-center justify-center w-full h-full ${isLarge ? 'text-3xl' : 'text-xl'}`}>{item.emoji}</div>;
             if (item.image) return <img src={item.image} alt={item.name} loading="lazy" className={`w-full h-full object-cover ${isLarge ? 'rounded-2xl' : 'rounded-xl'}`} />;
-            return <div className={`flex items-center justify-center w-full h-full ${isLarge ? 'text-3xl' : 'text-xl'}`}>{getFoodEmoji(item.name)}</div>;
+            return <div className={`flex items-center justify-center w-full h-full ${isLarge ? 'text-3xl' : 'text-xl'}`}>🍽️</div>;
         };
 
         const resizeImage = (file) => {
@@ -338,7 +325,7 @@
             };
 
             const fetchEmojiForProduct = async (name) => {
-                if (!user.geminiApiKey) return getFoodEmoji(name);
+                if (!user.geminiApiKey) return "🍽️";
                 try {
                     const prompt = `Welches einzelne, passendste Emoji beschreibt "${name}" am besten? Antworte NUR mit GENAU EINEM Emoji und absolut keinem weiteren Text.`;
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${user.geminiApiKey}`, {
@@ -349,8 +336,8 @@
                     const data = await res.json();
                     const text = data.candidates[0].content.parts[0].text.trim();
                     // Extrakt only the first emoji found or just the first char if it's a surrogate pair
-                    return [...text][0] || getFoodEmoji(name);
-                } catch (e) { return getFoodEmoji(name); }
+                    return [...text][0] || "🍽️";
+                } catch (e) { return "🍽️"; }
             };
 
             const fetchBarcode = async (code) => {
