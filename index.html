@@ -96,10 +96,9 @@
         };
 
         const getItemDisplay = (item, isLarge = false) => {
+            if (item.emoji) return <div className={`flex items-center justify-center w-full h-full ${isLarge ? 'text-3xl' : 'text-xl'}`}>{item.emoji}</div>;
             if (item.image) return <img src={item.image} alt={item.name} loading="lazy" className={`w-full h-full object-cover ${isLarge ? 'rounded-2xl' : 'rounded-xl'}`} />;
-            if (item.emoji) return item.emoji;
-            if (item.isBarcode) return getFoodEmoji(item.name);
-            return "🍽️";
+            return <div className={`flex items-center justify-center w-full h-full ${isLarge ? 'text-3xl' : 'text-xl'}`}>{getFoodEmoji(item.name)}</div>;
         };
 
         const resizeImage = (file) => {
@@ -169,17 +168,37 @@
             </div>
         );
 
-        const GoalInput = ({ label, value, color, onChange }) => (
-            <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] block px-1">{label}</label>
-                <input 
-                    type="number" 
-                    value={value || 0} 
-                    onChange={e => onChange(Number(e.target.value))} 
-                    className={`w-full p-5 bg-slate-900 border border-white/5 rounded-2xl font-black text-xl outline-none focus:ring-2 focus:ring-brand-500/50 shadow-inner ${color}`} 
-                />
-            </div>
-        );
+        const GoalInput = ({ label, value, color, onChange }) => {
+            const [saved, setSaved] = useState(false);
+            const timer = useRef();
+
+            const handleChange = (v) => {
+                onChange(v);
+                setSaved(true);
+                clearTimeout(timer.current);
+                timer.current = setTimeout(() => setSaved(false), 1000);
+            };
+
+            return (
+                <div className="space-y-1 relative">
+                    <div className="flex justify-between items-center px-1">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] block">{label}</label>
+                        {saved && <span className="text-emerald-500 animate-bounce"><CheckIcon size={12} strokeWidth={4}/></span>}
+                    </div>
+                    <input 
+                        type="number" 
+                        inputMode="numeric"
+                        value={value === 0 ? '' : value} 
+                        placeholder="0"
+                        onChange={e => {
+                            const val = e.target.value;
+                            handleChange(val === '' ? 0 : Number(val));
+                        }} 
+                        className={`w-full p-5 bg-slate-900 border border-white/5 rounded-2xl font-black text-xl outline-none focus:ring-2 focus:ring-brand-500/50 shadow-inner ${color}`} 
+                    />
+                </div>
+            );
+        };
 
         // --- MAIN APP ---
         function App() {
@@ -318,12 +337,30 @@
                 }
             };
 
+            const fetchEmojiForProduct = async (name) => {
+                if (!user.geminiApiKey) return getFoodEmoji(name);
+                try {
+                    const prompt = `Welches einzelne, passendste Emoji beschreibt "${name}" am besten? Antworte NUR mit GENAU EINEM Emoji und absolut keinem weiteren Text.`;
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${user.geminiApiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) 
+                    });
+                    const data = await res.json();
+                    const text = data.candidates[0].content.parts[0].text.trim();
+                    // Extrakt only the first emoji found or just the first char if it's a surrogate pair
+                    return [...text][0] || getFoodEmoji(name);
+                } catch (e) { return getFoodEmoji(name); }
+            };
+
             const fetchBarcode = async (code) => {
                 try {
+                    setIsThinking(true);
                     const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
                     const data = await res.json();
                     if(data.status === 1) {
                         const p = data.product;
+                        const emoji = await fetchEmojiForProduct(p.product_name || "Unbekannt");
                         const item = {
                             name: p.product_name || "Unbekannt",
                             calories: Math.round(p.nutriments['energy-kcal_100g'] || 0),
@@ -333,31 +370,31 @@
                             fat: p.nutriments.fat_100g || 0,
                             saturatedFat: p.nutriments['saturated-fat_100g'] || 0,
                             unsaturatedFat: (p.nutriments.fat_100g || 0) - (p.nutriments['saturated-fat_100g'] || 0),
-                            image: p.image_front_small_url,
+                            emoji: emoji,
                             isBarcode: true
                         };
                         setSelectedFood(item);
                         setAmount(Number(p.serving_quantity) || 100);
                     } else { alert("Produkt nicht gefunden."); }
                 } catch (e) { alert("Barcode Fehler: Keine Verbindung."); }
+                finally { setIsThinking(false); }
             };
 
-            // HIER IST DER GEFIXTE BEREICH (Zurück zu deiner Regex-Methode)
             const askGemini = async (text, img = null) => {
                 if (!user.geminiApiKey) return alert("Bitte hinterlege deinen API Key im Profil!");
                 setIsThinking(true);
                 try {
                     const prompt = `Analysiere folgendes Essen (Bild und/oder Text): ${text || "das Bild"}. 
-                    WICHTIGSTE REGEL: Gib IMMER und AUSNAHMSLOS die Nährwerte für exakt 100 Gramm an! Auch wenn der Text "ein ganzes Hähnchen", "eine große Pizza" oder "500g" lautet oder das Bild eine riesige Portion zeigt – rechne die Makros ZWINGEND auf 100g herunter.
-                    Schätze bei 'estimatedPortionWeight' das Gewicht der GESAMTEN beschriebenen/sichtbaren Portion ab (z.B. halbes Hähnchen = 400).
-                    Wenn mehrere Lebensmittel erkennbar sind, fasse sie zu EINEM Gericht zusammen und nenne die Durchschnittswerte pro 100g der Mischung.
+                    WICHTIGSTE REGEL: Gib IMMER und AUSNAHMSLOS die Nährwerte für exakt 100 Gramm an!
+                    Schätze bei 'estimatedPortionWeight' das Gewicht der GESAMTEN beschriebenen/sichtbaren Portion ab.
+                    Wähle GENAU EIN passendes Emoji aus.
                     Gib AUSSCHLIESSLICH ein einziges, valides JSON-Objekt zurück.
                     Format: {"name":"string", "calories":int, "protein":float, "carbs":float, "sugar":float, "fat":float, "saturatedFat":float, "estimatedPortionWeight":int, "emoji":"string"}`;
                     
                     let contents = [{ parts: [{ text: prompt }] }];
                     if (img) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } });
 
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${user.geminiApiKey}`, {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${user.geminiApiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents }) 
@@ -365,12 +402,16 @@
                     const data = await res.json();
                     if(data.error) throw new Error(data.error.message);
                     
-                    // Deine alte, extrem robuste Regex-Methode für JSON
                     const textContent = data.candidates[0].content.parts[0].text;
                     const jsonMatch = textContent.match(/\{[\s\S]*\}/);
                     if (!jsonMatch) throw new Error("Die KI hat kein erkennbares Format geliefert.");
                     
                     const json = JSON.parse(jsonMatch[0]);
+                    
+                    // Sicherstellen, dass nur EIN Emoji genommen wird
+                    if (json.emoji) {
+                        json.emoji = [...json.emoji.trim()][0];
+                    }
                     
                     setSelectedFood({ ...json, id: generateId(), isAi: true, image: img });
                     if (json.estimatedPortionWeight) setAmount(json.estimatedPortionWeight);
@@ -395,6 +436,7 @@
                     fat: item.baseFat,
                     saturatedFat: item.baseSaturatedFat,
                     unsaturatedFat: item.baseUnsaturatedFat,
+                    emoji: item.emoji,
                     image: item.image
                 });
                 setAmount(Math.round(item.amountFactor * 100));
@@ -461,7 +503,10 @@
                             <div className="w-full glass-card rounded-[3rem] p-8 space-y-6 overscroll-contain">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <h3 className="text-2xl font-black">{showDetails.name}</h3>
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-4xl">{showDetails.emoji || "🍽️"}</div>
+                                            <h3 className="text-2xl font-black">{showDetails.name}</h3>
+                                        </div>
                                         <div className="text-[10px] font-black text-brand-400 uppercase tracking-widest mt-1">Portion: {showDetails.amountDisplay}</div>
                                     </div>
                                     <button onClick={() => setShowDetails(null)} className="p-2 bg-slate-800 rounded-full"><XIcon size={20}/></button>
@@ -485,7 +530,18 @@
                             <div className="fixed inset-0 bg-slate-950/90 z-[450] backdrop-blur-sm animate-in fade-in duration-300" onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}}></div>
                             <div className="fixed bottom-4 left-4 right-4 z-[460] glass-card rounded-[3rem] p-8 shadow-2xl border border-white/10 animate-in slide-up duration-300 overscroll-contain max-h-[90vh] overflow-y-auto">
                                 <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-2xl font-black text-white">{selectedFood.name}</h3>
+                                    <div className="flex items-center gap-4">
+                                        <button 
+                                            onClick={() => {
+                                                const newEmoji = prompt("Wähle ein Emoji:", selectedFood.emoji || "🍽️");
+                                                if (newEmoji) setSelectedFood({...selectedFood, emoji: newEmoji});
+                                            }}
+                                            className="w-14 h-14 bg-slate-800/80 rounded-[1.2rem] flex items-center justify-center text-3xl border border-white/10 shadow-inner hover:bg-slate-700 transition-colors"
+                                        >
+                                            {selectedFood.emoji || "🍽️"}
+                                        </button>
+                                        <h3 className="text-2xl font-black text-white">{selectedFood.name}</h3>
+                                    </div>
                                     <button type="button" onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}} className="p-2 bg-slate-800 rounded-full active:opacity-80"><XIcon size={20}/></button>
                                 </div>
                                 
@@ -496,9 +552,10 @@
                                             <input 
                                                 type="number" 
                                                 inputMode="decimal"
-                                                value={amount} 
+                                                value={amount === 0 ? '' : amount} 
+                                                placeholder="0"
                                                 onFocus={(e) => setTimeout(() => e.target.select(), 50)} 
-                                                onChange={e => setAmount(e.target.value === '' ? '' : Number(e.target.value))} 
+                                                onChange={e => setAmount(e.target.value === '' ? 0 : Number(e.target.value))} 
                                                 className="w-full p-5 bg-slate-900 rounded-[1.5rem] text-3xl font-black text-center outline-none focus:ring-2 focus:ring-brand-500 text-white" 
                                             />
                                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 font-black pointer-events-none">g</span>
@@ -528,8 +585,8 @@
                                 
                                 <button type="button" 
                                     onPointerDown={handleSafeAction(() => addEntry(selectedFood))}
-                                    className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all touch-manipulation">
-                                    {editingInstanceId ? 'Aktualisieren' : 'Bestätigen'}
+                                    className="w-full bg-brand-500 text-slate-950 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all touch-manipulation flex items-center justify-center gap-3">
+                                    {isThinking ? <LoaderIcon size={20}/> : (editingInstanceId ? 'Aktualisieren' : 'Bestätigen')}
                                 </button>
                             </div>
                         </>
