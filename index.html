@@ -114,14 +114,16 @@
             const radius = 80;
             const normRadius = radius - 12;
             const circ = normRadius * 2 * Math.PI;
-            const percent = Math.min(100, (consumed / (target || 1)) * 100) || 0;
+            const rawPercent = (consumed / (target || 1)) * 100 || 0;
+            const isExceeded = rawPercent > 100;
+            const percent = isExceeded ? (rawPercent % 100 || 100) : rawPercent;
             const offset = circ - (percent / 100) * circ;
             const diff = target - consumed;
             return (
                 <div className="relative flex items-center justify-center">
                     <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
                         <circle stroke="#1e293b" strokeWidth={12} fill="transparent" r={normRadius} cx={radius} cy={radius} />
-                        <circle stroke={diff < 0 ? "#ef4444" : "#8b5cf6"} strokeWidth={12} strokeDasharray={circ} style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s' }} strokeLinecap="round" fill="transparent" r={normRadius} cx={radius} cy={radius} />
+                        <circle stroke={isExceeded ? "#ef4444" : "#8b5cf6"} strokeWidth={12} strokeDasharray={circ} style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s' }} strokeLinecap="round" fill="transparent" r={normRadius} cx={radius} cy={radius} />
                     </svg>
                     <div className="absolute text-center">
                         <div className="text-3xl font-black text-white tracking-tighter">{Math.round(consumed)}</div>
@@ -134,7 +136,9 @@
         });
 
         const MacroBar = ({ label, value, target, color }) => {
-            const percent = Math.min(100, (value / (target || 1)) * 100) || 0;
+            const rawPercent = (value / (target || 1)) * 100 || 0;
+            const isExceeded = rawPercent > 100;
+            const percent = isExceeded ? (rawPercent % 100 || 100) : rawPercent;
             return (
                 <div className="space-y-1.5">
                     <div className="flex justify-between items-end px-1">
@@ -142,7 +146,7 @@
                         <span className="text-[10px] font-bold text-white">{Math.round(value)}g <span>/ {target}g</span></span>
                     </div>
                     <div className="h-1.5 w-full bg-slate-800/50 rounded-full overflow-hidden">
-                        <div className={`h-full ${color} rounded-full transition-all duration-1000`} style={{ width: `${percent}%` }}></div>
+                        <div className={`h-full ${isExceeded ? 'bg-rose-500' : color} rounded-full transition-all duration-1000`} style={{ width: `${percent}%` }}></div>
                     </div>
                 </div>
             );
@@ -309,10 +313,24 @@
                 setIsScanning(true);
                 setTimeout(() => {
                     qrInstance.current = new Html5Qrcode("qr-reader");
-                    qrInstance.current.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-                        fetchBarcode(text);
-                        stopBarcodeScan();
-                    }, () => {}).catch(() => { alert("Kamera-Fehler. Berechtigung erteilt?"); setIsScanning(false); });
+                    qrInstance.current.start(
+                        { facingMode: "environment", focusMode: "continuous" }, 
+                        { fps: 10, qrbox: 250 }, 
+                        (text) => {
+                            fetchBarcode(text);
+                            stopBarcodeScan();
+                        }, 
+                        () => {}
+                    ).catch(() => { 
+                        // Zweiter Versuch mit einfacheren Constraints falls focusMode nicht unterstützt wird
+                        qrInstance.current.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+                            fetchBarcode(text);
+                            stopBarcodeScan();
+                        }, () => {}).catch(() => {
+                            alert("Kamera-Fehler. Berechtigung erteilt?"); 
+                            setIsScanning(false); 
+                        });
+                    });
                 }, 300);
             };
 
@@ -436,6 +454,8 @@
                 const factor = safeAmount / 100;
                 
                 const baseProps = {
+                    name: food.name || "Unbekannt",
+                    emoji: food.emoji || "🍽️",
                     calories: Number(food.baseCalories ?? food.calories ?? 0),
                     protein: Number(food.baseProtein ?? food.protein ?? 0),
                     carbs: Number(food.baseCarbs ?? food.carbs ?? 0),
@@ -446,30 +466,35 @@
                 baseProps.unsaturatedFat = Number(food.baseUnsaturatedFat ?? food.unsaturatedFat ?? (baseProps.fat - baseProps.saturatedFat));
 
                 const entry = { 
-                    name: food.name,
+                    name: baseProps.name,
                     instanceId: editingInstanceId || generateId(),
                     amountFactor: factor, 
                     amountDisplay: `${safeAmount}g`,
-                    emoji: food.emoji,
+                    emoji: baseProps.emoji,
                     isBarcode: food.isBarcode,
                     image: food.isAi ? null : food.image,
-                    ...Object.fromEntries(Object.entries(baseProps).map(([k, v]) => [k, v * factor])),
+                    calories: baseProps.calories * factor,
+                    protein: baseProps.protein * factor,
+                    carbs: baseProps.carbs * factor,
+                    sugar: baseProps.sugar * factor,
+                    fat: baseProps.fat * factor,
+                    saturatedFat: baseProps.saturatedFat * factor,
+                    unsaturatedFat: baseProps.unsaturatedFat * factor,
                     baseCalories: baseProps.calories, baseProtein: baseProps.protein, baseCarbs: baseProps.carbs,
                     baseSugar: baseProps.sugar, baseFat: baseProps.fat, baseSaturatedFat: baseProps.saturatedFat, baseUnsaturatedFat: baseProps.unsaturatedFat
                 };
                 
                 if (editingInstanceId) {
                     setDailyLog(prev => ({ ...prev, items: (prev.items || []).map(i => i.instanceId === editingInstanceId ? entry : i) }));
-                    // Update emoji in history as well if it was edited
                     setItemHistory(prev => {
                         const safePrev = Array.isArray(prev) ? prev : [];
-                        return safePrev.map(i => i.name === food.name ? { ...i, emoji: food.emoji } : i);
+                        return safePrev.map(i => i.name === food.name || i.name === baseProps.name ? { ...entry, id: i.id || generateId(), lastAmount: safeAmount } : i);
                     });
                 } else {
                     setDailyLog(prev => ({ ...prev, items: [...(prev.items || []), entry] }));
                     setItemHistory(prev => {
                         const safePrev = Array.isArray(prev) ? prev : [];
-                        const filtered = safePrev.filter(i => i?.name !== food.name);
+                        const filtered = safePrev.filter(i => i?.name !== baseProps.name);
                         return [{ ...entry, lastAmount: safeAmount, id: generateId() }, ...filtered].slice(0, 50); 
                     });
                 }
@@ -511,7 +536,7 @@
                                 </div>
                                 <div className="flex gap-3">
                                     <button onClick={() => setShowDetails(null)} className="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">Schließen</button>
-                                    <button onClick={() => openEdit(showDetails)} className="flex-[2] py-4 bg-brand-600 rounded-2xl font-black shadow-lg active:opacity-80">Menge anpassen</button>
+                                    <button onClick={() => openEdit(showDetails)} className="flex-[2] py-4 bg-brand-600 rounded-2xl font-black shadow-lg active:opacity-80">Bearbeiten</button>
                                 </div>
                             </div>
                         </div>
@@ -522,34 +547,28 @@
                             <div className="fixed inset-0 bg-slate-950/90 z-[450] backdrop-blur-sm animate-in fade-in duration-300" onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}}></div>
                             <div className="fixed bottom-4 left-4 right-4 z-[460] glass-card rounded-[3rem] p-8 shadow-2xl border border-white/10 animate-in slide-up duration-300 overscroll-contain max-h-[90vh] overflow-y-auto">
                                 <div className="flex justify-between items-center mb-6">
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-4 w-full mr-2">
                                         <button 
                                             onClick={() => {
                                                 const input = prompt("Wähle ein Emoji:", selectedFood.emoji || "🍽️");
                                                 if (input) {
                                                     const newEmoji = [...input.trim()][0];
                                                     setSelectedFood(prev => ({...prev, emoji: newEmoji}));
-                                                    
-                                                    // Sofort im Tagebuch synchronisieren
-                                                    setDailyLog(prev => ({
-                                                        ...prev,
-                                                        items: (prev.items || []).map(item => item.name === selectedFood.name ? { ...item, emoji: newEmoji } : item)
-                                                    }));
-                                                    
-                                                    // Sofort in der Historie synchronisieren
-                                                    setItemHistory(prev => {
-                                                        const safePrev = Array.isArray(prev) ? prev : [];
-                                                        return safePrev.map(i => i.name === selectedFood.name ? { ...i, emoji: newEmoji } : i);
-                                                    });
                                                 }
                                             }}
-                                            className="w-14 h-14 bg-slate-800/80 rounded-[1.2rem] flex items-center justify-center text-3xl border border-white/10 shadow-inner hover:bg-slate-700 transition-colors"
+                                            className="w-14 h-14 shrink-0 bg-slate-800/80 rounded-[1.2rem] flex items-center justify-center text-3xl border border-white/10 shadow-inner hover:bg-slate-700 transition-colors"
                                         >
                                             {selectedFood.emoji || "🍽️"}
                                         </button>
-                                        <h3 className="text-2xl font-black text-white">{selectedFood.name}</h3>
+                                        <input 
+                                            type="text" 
+                                            value={selectedFood.name} 
+                                            placeholder="Name des Essens"
+                                            onChange={e => setSelectedFood({...selectedFood, name: e.target.value})}
+                                            className="bg-transparent text-2xl font-black text-white outline-none border-b border-white/10 focus:border-brand-500 w-full"
+                                        />
                                     </div>
-                                    <button type="button" onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}} className="p-2 bg-slate-800 rounded-full active:opacity-80"><XIcon size={20}/></button>
+                                    <button type="button" onClick={() => {setSelectedFood(null); setEditingInstanceId(null);}} className="p-2 bg-slate-800 rounded-full active:opacity-80 shrink-0"><XIcon size={20}/></button>
                                 </div>
                                 
                                 <div className="space-y-6 mb-8">
@@ -572,21 +591,34 @@
 
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center">
-                                            <div className="text-[8px] font-black text-slate-500 uppercase">🔥 Energie</div>
-                                            <div className="text-lg font-black text-brand-400">{Math.round(selectedFood.calories * ((amount||0)/100))} <span className="text-[8px]">kcal</span></div>
+                                            <div className="text-[8px] font-black text-slate-500 uppercase">🔥 Energie (100g)</div>
+                                            <input type="number" value={selectedFood.calories} onChange={e => setSelectedFood({...selectedFood, calories: Number(e.target.value)})} className="bg-transparent text-lg font-black text-brand-400 text-center w-full outline-none" />
                                         </div>
                                         <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center">
-                                            <div className="text-[8px] font-black text-slate-500 uppercase">💪 Protein</div>
-                                            <div className="text-lg font-black text-fuchsia-400">{Math.round(selectedFood.protein * ((amount||0)/100))}g</div>
+                                            <div className="text-[8px] font-black text-slate-500 uppercase">💪 Protein (100g)</div>
+                                            <input type="number" value={selectedFood.protein} onChange={e => setSelectedFood({...selectedFood, protein: Number(e.target.value)})} className="bg-transparent text-lg font-black text-fuchsia-400 text-center w-full outline-none" />
                                         </div>
-                                        <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center col-span-2">
-                                            <div className="text-[8px] font-black text-slate-500 uppercase">🍞 Kohlenhydrate</div>
-                                            <div className="text-lg font-black text-blue-400">{Math.round(selectedFood.carbs * ((amount||0)/100))}g <span className="text-xs text-blue-300/40 ml-2">davon {Math.round(selectedFood.sugar * ((amount||0)/100))}g Zucker</span></div>
+                                        <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center col-span-2 flex flex-col items-center">
+                                            <div className="text-[8px] font-black text-slate-500 uppercase">🍞 Kohlenhydrate (100g)</div>
+                                            <div className="flex items-center gap-2">
+                                                <input type="number" value={selectedFood.carbs} onChange={e => setSelectedFood({...selectedFood, carbs: Number(e.target.value)})} className="bg-transparent text-lg font-black text-blue-400 text-center w-20 outline-none" />
+                                                <div className="text-[8px] font-black text-slate-700 uppercase">davon Zucker</div>
+                                                <input type="number" value={selectedFood.sugar} onChange={e => setSelectedFood({...selectedFood, sugar: Number(e.target.value)})} className="bg-transparent text-lg font-black text-blue-300/60 text-center w-20 outline-none" />
+                                            </div>
                                         </div>
-                                        <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center col-span-2">
-                                            <div className="text-[8px] font-black text-slate-500 uppercase">🥑 Fett</div>
-                                            <div className="text-lg font-black text-amber-400">{Math.round(selectedFood.fat * ((amount||0)/100))}g <span className="text-xs text-amber-300/40 ml-2">davon {Math.round(selectedFood.saturatedFat * ((amount||0)/100))}g gesättigt</span></div>
+                                        <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-center col-span-2 flex flex-col items-center">
+                                            <div className="text-[8px] font-black text-slate-500 uppercase">🥑 Fett (100g)</div>
+                                            <div className="flex items-center gap-2">
+                                                <input type="number" value={selectedFood.fat} onChange={e => setSelectedFood({...selectedFood, fat: Number(e.target.value)})} className="bg-transparent text-lg font-black text-amber-400 text-center w-20 outline-none" />
+                                                <div className="text-[8px] font-black text-slate-700 uppercase">davon gesättigt</div>
+                                                <input type="number" value={selectedFood.saturatedFat} onChange={e => setSelectedFood({...selectedFood, saturatedFat: Number(e.target.value)})} className="bg-transparent text-lg font-black text-amber-300/60 text-center w-20 outline-none" />
+                                            </div>
                                         </div>
+                                    </div>
+                                    
+                                    <div className="text-center p-4 bg-slate-900/30 rounded-2xl border border-white/5">
+                                        <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Berechnet für {amount}g</div>
+                                        <div className="text-2xl font-black text-white">{Math.round(selectedFood.calories * ((amount||0)/100))} <span className="text-xs text-brand-400">kcal</span></div>
                                     </div>
                                 </div>
                                 
@@ -696,11 +728,17 @@
                                     </button>
                                 </div>
                                 <div className="flex gap-3">
-                                    <button onClick={handleAiTextClick} disabled={isThinking} className="flex-1 bg-slate-900 border border-white/10 py-4 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2">
+                                    <button onClick={handleAiTextClick} disabled={isThinking} className="flex-1 bg-slate-900 border border-white/10 py-4 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 active:bg-slate-800 transition-colors">
                                         {isThinking ? <LoaderIcon size={14}/> : <SparklesIcon size={14} className="text-brand-400"/>} AI Text
                                     </button>
-                                    <button onClick={() => aiFileRef.current.click()} disabled={isThinking} className="flex-1 bg-brand-500 text-slate-950 py-4 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 shadow-lg active:scale-95">
+                                    <button onClick={() => aiFileRef.current.click()} disabled={isThinking} className="flex-1 bg-slate-900 border border-white/10 py-4 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 active:bg-slate-800 transition-colors">
                                         <CameraIcon size={16}/> AI Foto
+                                    </button>
+                                    <button onClick={() => {
+                                        setSelectedFood({ name: '', calories: 0, protein: 0, carbs: 0, sugar: 0, fat: 0, saturatedFat: 0, emoji: '🍽️', isManual: true });
+                                        setAmount(100);
+                                    }} className="flex-1 bg-brand-500 text-slate-950 py-4 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
+                                        <PlusIcon size={16}/> Manuell
                                     </button>
                                 </div>
                                 <input type="file" accept="image/*" capture="environment" ref={aiFileRef} className="hidden" onChange={async e => {
